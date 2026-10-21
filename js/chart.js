@@ -44,20 +44,34 @@ export function createChart(wrap) {
     const m = { top: 12, right: 66, bottom: 26, left: 4 };
     const n = opts.n;
 
+    // On a log scale equal steps mean equal multiples (×2, ×10…).
+    const log = !!opts.log;
+    const tv = log ? (v) => (v > 0 ? Math.log10(v) : null) : (v) => v;
     let min = Infinity, max = -Infinity;
-    for (const s of opts.series) for (const v of s.values) if (v != null) { if (v < min) min = v; if (v > max) max = v; }
-    for (const mk of opts.markers || []) { min = Math.min(min, mk.v); max = Math.max(max, mk.v); }
-    if (opts.baseline != null) { min = Math.min(min, opts.baseline); max = Math.max(max, opts.baseline); }
-    const pad = (max - min) * 0.07 || max * 0.02 || 1;
-    min = Math.max(0, min - pad); max += pad;
+    const see = (v) => { const u = tv(v); if (u != null) { if (u < min) min = u; if (u > max) max = u; } };
+    for (const s of opts.series) for (const v of s.values) if (v != null) see(v);
+    for (const mk of opts.markers || []) see(mk.v);
+    if (opts.baseline != null) see(opts.baseline);
+    const pad = (max - min) * 0.07 || Math.abs(max) * 0.02 || 1;
+    min = log ? min - pad : Math.max(0, min - pad);
+    max += pad;
 
-    const yTicks = niceTicks(min, max, H < 240 ? 3 : 4);
+    let yTicks;
+    if (log) {
+      const cand = [];
+      for (let k = Math.floor(min); k <= Math.ceil(max); k++) for (const m of [1, 2, 5]) cand.push(m * 10 ** k);
+      yTicks = cand.filter((v) => Math.log10(v) >= min && Math.log10(v) <= max);
+      if (yTicks.length > 6) yTicks = yTicks.filter((v) => /^1/.test(v.toExponential()));
+      if (yTicks.length < 2) yTicks = niceTicks(10 ** min, 10 ** max, 3).filter((v) => v > 0);
+    } else {
+      yTicks = niceTicks(min, max, H < 240 ? 3 : 4);
+    }
     const yLabels = yTicks.map(opts.yFmt);
     // Leave room on the right for the longest price label.
     m.right = Math.max(44, Math.ceil(Math.max(...yLabels.map((l) => l.length)) * 7.2) + 10);
     const iw = W - m.left - m.right, ih = H - m.top - m.bottom;
     const x = (i) => m.left + (i / (n - 1)) * iw;
-    const y = (v) => m.top + (1 - (v - min) / (max - min)) * ih;
+    const y = (v) => m.top + (1 - (tv(v) - min) / (max - min)) * ih;
 
     let out = yTicks.map((v, k) => `
       <line class="gl" x1="${m.left}" x2="${m.left + iw}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}"></line>
@@ -71,7 +85,7 @@ export function createChart(wrap) {
       const segs = [];
       let cur = [];
       s.values.forEach((v, i) => {
-        if (v == null) { if (cur.length) segs.push(cur); cur = []; return; }
+        if (v == null || tv(v) == null) { if (cur.length) segs.push(cur); cur = []; return; }
         cur.push([x(i), y(v)]);
       });
       if (cur.length) segs.push(cur);
@@ -131,7 +145,7 @@ export function createChart(wrap) {
     line.setAttribute('x2', cx);
     [...g.querySelectorAll('circle')].forEach((c, k) => {
       const v = opts.series[k].values[i];
-      c.setAttribute('visibility', v == null ? 'hidden' : 'visible');
+      c.setAttribute('visibility', v == null || (opts.log && !(v > 0)) ? 'hidden' : 'visible');
       if (v != null) { c.setAttribute('cx', cx); c.setAttribute('cy', y(v)); }
     });
     const [main, sub] = opts.tip(i);

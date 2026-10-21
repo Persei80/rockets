@@ -1,13 +1,18 @@
 // Portfolio math. Money is tracked in shekels at the rate of each purchase,
 // so the result includes what the dollar did, as on a real Israeli account.
 
-import { lastPrice } from './api.js';
+import { lastPrice, barIso } from './api.js';
+import { t } from './i18n.js';
+import { todayIso } from './format.js';
 
 const EPS = 1e-9;
 
 export function sortedTxs(txs) {
   return [...txs].sort((a, b) => a.date.localeCompare(b.date) || a.created - b.created);
 }
+
+const buyCost = (tx) => tx.shares * tx.price * tx.fx + tx.fee;
+const sellProceeds = (tx) => tx.shares * tx.price * tx.fx - tx.fee;
 
 // One entry per company, with average-cost accounting for sales.
 export function positions(txs) {
@@ -20,7 +25,7 @@ export function positions(txs) {
     }
     p.txs.push(tx);
     if (tx.type === 'buy') {
-      const ils = tx.shares * tx.price * tx.fx + tx.fee;
+      const ils = buyCost(tx);
       p.shares += tx.shares;
       p.costIls += ils;
       p.costUsd += tx.shares * tx.price + tx.fee / tx.fx;
@@ -28,7 +33,7 @@ export function positions(txs) {
     } else {
       const frac = p.shares > EPS ? Math.min(1, tx.shares / p.shares) : 0;
       const costPart = p.costIls * frac;
-      const proceeds = tx.shares * tx.price * tx.fx - tx.fee;
+      const proceeds = sellProceeds(tx);
       p.realizedIls += proceeds - costPart;
       p.proceedsIls += proceeds;
       p.costIls -= costPart;
@@ -53,33 +58,34 @@ export function valuePositions(list, quotes, fx) {
     p.price = price;
     p.valueIls = p.open && price != null && fx ? p.shares * price * fx : p.open ? null : 0;
     p.gainIls = p.valueIls != null ? p.valueIls - p.costIls : null;
+    p.gainPct = p.gainIls != null && p.costIls > 0 ? (p.gainIls / p.costIls) * 100 : null;
     p.mult = p.open && p.valueIls != null && p.costIls > 0 ? p.valueIls / p.costIls : null;
     // Today's move: against yesterday's close, in shekels at today's rate.
-    p.todayIls = p.open && q && q.pc && fx ? p.shares * (price - q.pc) * fx : null;
-    p.totalMult = p.investedIls > 0 && p.valueIls != null ? (p.valueIls + p.proceedsIls) / p.investedIls : null;
+    p.todayIls = p.open && q && q.pc && fx && price != null ? p.shares * (price - q.pc) * fx : null;
+    p.todayPct = q ? (q.ext ? q.ext.dp : q.dp) : null;
   }
   return list;
 }
 
 export function totals(list) {
-  const t = { invested: 0, value: 0, proceeds: 0, cost: 0, today: 0, missing: false, open: 0 };
+  const r = { invested: 0, value: 0, proceeds: 0, cost: 0, today: 0, missing: false, open: 0 };
   for (const p of list) {
-    t.invested += p.investedIls;
-    t.proceeds += p.proceedsIls;
+    r.invested += p.investedIls;
+    r.proceeds += p.proceedsIls;
     if (p.open) {
-      t.open += 1;
-      t.cost += p.costIls;
-      if (p.valueIls == null) t.missing = true;
-      else t.value += p.valueIls;
-      if (p.todayIls != null) t.today += p.todayIls;
+      r.open += 1;
+      r.cost += p.costIls;
+      if (p.valueIls == null) r.missing = true;
+      else r.value += p.valueIls;
+      if (p.todayIls != null) r.today += p.todayIls;
     }
   }
-  t.result = t.value + t.proceeds - t.invested;
-  t.resultPct = t.invested > 0 ? (t.result / t.invested) * 100 : null;
-  t.mult = t.invested > 0 ? (t.value + t.proceeds) / t.invested : null;
-  const base = t.value - t.today;
-  t.todayPct = base > 0 ? (t.today / base) * 100 : null;
-  return t;
+  r.result = r.value + r.proceeds - r.invested;
+  r.resultPct = r.invested > 0 ? (r.result / r.invested) * 100 : null;
+  r.mult = r.invested > 0 ? (r.value + r.proceeds) / r.invested : null;
+  const base = r.value - r.today;
+  r.todayPct = base > 0 ? (r.today / base) * 100 : null;
+  return r;
 }
 
 // Shekels spent on purchases per 'YYYY-MM'.
@@ -88,9 +94,78 @@ export function spentByMonth(txs) {
   for (const tx of txs) {
     if (tx.type !== 'buy') continue;
     const ym = tx.date.slice(0, 7);
-    out[ym] = (out[ym] || 0) + tx.shares * tx.price * tx.fx + tx.fee;
+    out[ym] = (out[ym] || 0) + buyCost(tx);
   }
   return out;
+}
+
+// Months in a row with at least one purchase, ending this month or last.
+export function streak(spent) {
+  const d = new Date();
+  d.setDate(1);
+  const ym = () => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  if (!spent[ym()]) d.setMonth(d.getMonth() - 1);
+  let n = 0;
+  while (spent[ym()]) { n++; d.setMonth(d.getMonth() - 1); }
+  return n;
+}
+
+// ---------- portfolio over time ----------
+
+// Which chart history covers a span starting at iso.
+export function historyApi(iso) {
+  const days = (Date.now() - new Date(iso + 'T12:00:00').getTime()) / 86_400_000;
+  return days <= 25 ? '1M' : days <= 340 ? '1Y' : days <= 1780 ? '5Y' : 'ALL';
+}
+
+// Value of the holdings on each trading day vs what they cost.
+// barsBy: symbol -> bars; fxBy: iso -> rate (may be null); live: symbol -> price now.
+export function portfolioHistory(txs, barsBy, fxBy, fxNow, live) {
+  const list = sortedTxs(txs);
+  if (!list.length) return null;
+  const start = list[0].date;
+  const today = todayIso();
+  const dateSet = new Set([start, today]);
+  for (const bars of Object.values(barsBy)) for (const b of bars) { const d = barIso(b.d); if (d >= start && d <= today) dateSet.add(d); }
+  const dates = [...dateSet].sort();
+
+  const fxDates = fxBy ? Object.keys(fxBy).sort() : [];
+  let fi = 0, fx = fxDates.length && fxDates[0] <= start ? fxBy[fxDates[0]] : (list[0].fx || fxNow);
+  const ptr = {}, price = {}, shares = {}, cost = {};
+  let ti = 0;
+  const value = [], costs = [];
+  for (const date of dates) {
+    while (ti < list.length && list[ti].date <= date) {
+      const tx = list[ti++];
+      const s = tx.symbol;
+      shares[s] = shares[s] || 0;
+      cost[s] = cost[s] || 0;
+      if (price[s] == null) price[s] = tx.price;
+      if (tx.type === 'buy') { shares[s] += tx.shares; cost[s] += buyCost(tx); }
+      else {
+        const frac = shares[s] > EPS ? Math.min(1, tx.shares / shares[s]) : 0;
+        cost[s] -= cost[s] * frac;
+        shares[s] = Math.max(0, shares[s] - tx.shares);
+      }
+    }
+    for (const s of Object.keys(shares)) {
+      const bars = barsBy[s] || [];
+      let p = ptr[s] || 0;
+      while (p < bars.length && barIso(bars[p].d) <= date) { price[s] = bars[p].p; p++; }
+      ptr[s] = p;
+    }
+    while (fi < fxDates.length && fxDates[fi] <= date) { fx = fxBy[fxDates[fi]]; fi++; }
+    const rate = date === today && fxNow ? fxNow : fx || fxNow;
+    let v = 0, c = 0;
+    for (const s of Object.keys(shares)) {
+      const p = date === today && live[s] != null ? live[s] : price[s];
+      v += shares[s] * p * rate;
+      c += cost[s];
+    }
+    value.push(v);
+    costs.push(c);
+  }
+  return { dates, value, cost: costs };
 }
 
 // ---------- the rocket scale ----------
@@ -103,43 +178,37 @@ export function rocketPos(mult) {
 
 export function rocketStage(mult) {
   if (mult == null) return '';
-  if (mult < 0.5) return 'Сильно упала';
-  if (mult < 0.95) return 'Пока ниже покупки';
-  if (mult < 1.5) return 'На старте';
-  if (mult < 3) return 'Отрывается от земли';
-  if (mult < 10) return 'Набирает высоту';
-  if (mult < 100) return 'В космосе';
-  return 'На Луне!';
+  if (mult < 0.5) return t('stage.crash');
+  if (mult < 0.95) return t('stage.below');
+  if (mult < 1.5) return t('stage.pad');
+  if (mult < 3) return t('stage.liftoff');
+  if (mult < 10) return t('stage.climb');
+  if (mult < 100) return t('stage.space');
+  return t('stage.moon');
 }
 
 // ---------- company size ----------
 
 export function capClass(cap) {
   if (cap == null) return null;
-  if (cap < 300e6) return { key: 'micro', label: 'Микро', hint: 'Совсем маленькая: самый высокий риск' };
-  if (cap < 2e9) return { key: 'small', label: 'Маленькая', hint: 'Подходит под «ракету»: есть куда расти' };
-  if (cap < 10e9) return { key: 'mid', label: 'Средняя', hint: 'Уже выросла: ×100 отсюда маловероятно' };
-  return { key: 'large', label: 'Крупная', hint: 'Большая компания: не «ракета»' };
+  const key = cap < 300e6 ? 'micro' : cap < 2e9 ? 'small' : cap < 10e9 ? 'mid' : 'large';
+  return { key, label: t('cap.' + key), hint: t('cap.' + key + '.hint') };
 }
 
-export const RISKS = {
-  high: 'Высокий риск',
-  vhigh: 'Очень высокий риск',
-  lottery: 'Лотерея',
-};
+export const riskLabel = (risk) => (risk ? t('risk.' + risk) : '');
 
 // ---------- time machine ----------
 
 // What a lump sum or a monthly amount (in dollars) would have become.
 // bars must be chronological; start is 'YYYY-MM-DD'.
-export function simulate(bars, startIso, amountUsd, monthly, isoOf) {
-  const first = bars.findIndex((b) => isoOf(b.d) >= startIso);
+export function simulate(bars, startIso, amountUsd, monthly) {
+  const first = bars.findIndex((b) => barIso(b.d) >= startIso);
   if (first < 0) return null;
   const used = bars.slice(first);
   const value = [], invested = [];
   let shares = 0, put = 0, lastMonth = '';
   used.forEach((b, i) => {
-    const ym = isoOf(b.d).slice(0, 7);
+    const ym = barIso(b.d).slice(0, 7);
     if (i === 0 || (monthly && ym !== lastMonth)) {
       shares += amountUsd / b.p;
       put += amountUsd;
@@ -149,7 +218,7 @@ export function simulate(bars, startIso, amountUsd, monthly, isoOf) {
     invested.push(put);
   });
 
-  // The worst fall of the holding from a previous high.
+  // The worst fall of the share price from a previous high.
   let peak = used[0].p, peakI = 0, dd = 0, ddPeak = 0, ddLow = 0;
   used.forEach((b, i) => {
     if (b.p > peak) { peak = b.p; peakI = i; }

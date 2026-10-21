@@ -3,41 +3,51 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Мои ракеты</title>
-  <meta name="description" content="Личный дневник маленьких долгосрочных ставок на молодые компании">
+  <title>Мои ракеты · My Rockets</title>
+  <meta name="description" content="Личный дневник маленьких долгосрочных ставок на молодые компании · A personal tracker for small long-term bets on young companies">
   <meta name="theme-color" content="#0d0b1e">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" type="image/png" href="icons/icon-192.png">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <link rel="stylesheet" href="style.css">
+  <script>
+    // Apply a saved theme before the first paint, so it doesn't flash.
+    try {
+      const p = JSON.parse(localStorage.getItem('rk.prefs') || '{}');
+      if (p.theme === 'light' || p.theme === 'dark') document.documentElement.dataset.theme = p.theme;
+    } catch {}
+  </script>
 </head>
 <body>
   <header class="topbar">
     <div class="brand">
       <img src="icons/icon-192.png" width="30" height="30" alt="">
-      <h1>Мои ракеты</h1>
+      <h1 data-i18n="app.name">Мои ракеты</h1>
     </div>
-    <nav class="tabs" id="tabs" aria-label="Разделы">
-      <button type="button" data-view="portfolio"><svg class="ico" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5c3.2 2.2 5 5.8 5 10.2l-2 2.8H9l-2-2.8c0-4.4 1.8-8 5-10.2z"/><circle cx="12" cy="9.5" r="1.8"/><path d="M9 15.5l-2.6 3.3L9 18.3M15 15.5l2.6 3.3-2.6-.5M10.6 18.6L12 21.6l1.4-3"/></svg><span>Портфель</span></button>
-      <button type="button" data-view="watch"><svg class="ico" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span>Наблюдаю</span></button>
-      <button type="button" data-view="machine"><svg class="ico" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1"/><path d="M3 4v4h4"/><path d="M12 7.5V12l3 2"/></svg><span>Машина времени</span></button>
-      <button type="button" data-view="plan"><svg class="ico" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.3"/></svg><span>План</span></button>
+    <nav class="tabs" id="tabs" data-i18n-aria="tabs.aria">
+      <button type="button" data-view="portfolio"><svg class="ico" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5c3.2 2.2 5 5.8 5 10.2l-2 2.8H9l-2-2.8c0-4.4 1.8-8 5-10.2z"/><circle cx="12" cy="9.5" r="1.8"/><path d="M9 15.5l-2.6 3.3L9 18.3M15 15.5l2.6 3.3-2.6-.5M10.6 18.6L12 21.6l1.4-3"/></svg><span data-i18n="tab.portfolio"></span></button>
+      <button type="button" data-view="watch"><svg class="ico" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span data-i18n="tab.watch"></span></button>
+      <button type="button" data-view="machine"><svg class="ico" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1"/><path d="M3 4v4h4"/><path d="M12 7.5V12l3 2"/></svg><span data-i18n="tab.machine"></span></button>
+      <button type="button" data-view="plan"><svg class="ico" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.3"/></svg><span data-i18n="tab.plan"></span></button>
     </nav>
     <div class="top-actions">
-      <span id="fx-pill" class="pill" title="Курс доллара к шекелю">
+      <span id="fx-pill" class="pill">
         <span class="dot"></span><span class="fx-text">$1 = … ₪</span>
       </span>
-      <button id="install" type="button" class="btn primary small-btn" hidden>Установить</button>
-      <button id="help-btn" type="button" class="icon-btn" title="Как пользоваться" aria-label="Как пользоваться">?</button>
-      <button id="settings-btn" type="button" class="icon-btn" title="Настройки" aria-label="Настройки">
+      <button id="install" type="button" class="btn primary small-btn" data-i18n="top.install" hidden></button>
+      <button id="privacy-btn" type="button" class="icon-btn" aria-pressed="false">
+        <svg class="eye-on" viewBox="0 0 24 24" width="19" height="19" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+        <svg class="eye-off" viewBox="0 0 24 24" width="19" height="19" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.6 5.6A10 10 0 0 1 12 5.5c6.4 0 10 6.5 10 6.5a17 17 0 0 1-3.3 4.1M6.3 6.9C3.6 8.7 2 12 2 12s3.6 6.5 10 6.5c1.6 0 3-.4 4.3-1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>
+      </button>
+      <button id="lang-btn" type="button" class="icon-btn lang-btn">EN</button>
+      <button id="help-btn" type="button" class="icon-btn" data-i18n-title="top.help" data-i18n-aria="top.help">?</button>
+      <button id="settings-btn" type="button" class="icon-btn" data-i18n-title="top.settings" data-i18n-aria="top.settings">
         <svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></svg>
       </button>
     </div>
   </header>
 
-  <div id="storage-warning" class="banner" hidden>
-    Браузер не даёт сохранять данные (возможно, включён режим инкогнито). Записи пропадут после закрытия окна.
-  </div>
+  <div id="storage-warning" class="banner" data-i18n="top.noStorage" hidden></div>
 
   <main>
     <section id="view-portfolio" class="view" hidden></section>
@@ -48,18 +58,21 @@
 
   <div id="toast" class="toast" role="status" hidden>
     <span class="msg"></span>
-    <button type="button" class="undo" hidden>Отменить</button>
+    <button type="button" class="undo" hidden></button>
   </div>
 
   <!-- Company window -->
   <dialog id="detail" class="sheet" aria-labelledby="d-symbol">
     <div class="sheet-body">
       <div class="sheet-head">
-        <div class="ident">
-          <div id="d-symbol" class="d-symbol"></div>
-          <div class="d-name muted"></div>
+        <div class="d-ident">
+          <div id="d-logo"></div>
+          <div>
+            <div id="d-symbol" class="d-symbol"></div>
+            <div class="d-name muted"></div>
+          </div>
         </div>
-        <button type="button" class="close-btn" data-close aria-label="Закрыть">&times;</button>
+        <button type="button" class="close-btn" data-close data-i18n-aria="close">&times;</button>
       </div>
       <div class="d-quote">
         <span class="d-price"></span>
@@ -75,27 +88,28 @@
         <p class="chart-msg muted" hidden></p>
       </div>
       <div class="chart-legend small muted" id="d-legend" hidden>
-        <span><i class="lg buy"></i>мои покупки</span>
-        <span><i class="lg sell"></i>продажи</span>
-        <span><i class="lg avg"></i>моя средняя цена</span>
+        <span><i class="lg buy"></i><span data-i18n="d.lgBuys"></span></span>
+        <span><i class="lg sell"></i><span data-i18n="d.lgSells"></span></span>
+        <span><i class="lg avg"></i><span data-i18n="d.lgAvg"></span></span>
       </div>
       <div class="d-actions">
-        <button type="button" class="btn primary" data-act="buy">Записать покупку</button>
-        <button type="button" class="btn" data-act="sell">Продажа</button>
+        <button type="button" class="btn primary" data-act="buy" data-i18n="pf.addBuy"></button>
+        <button type="button" class="btn" data-act="sell" data-i18n="d.sell"></button>
         <button type="button" class="btn" data-act="watch"></button>
       </div>
       <section id="d-position" class="d-section" hidden></section>
       <section class="d-section">
-        <h3>Почему я верю в эту компанию</h3>
-        <textarea id="d-note" rows="3" placeholder="Например: делают батареи нового типа, есть контракт с крупным автопроизводителем, денег хватит на 3 года…"></textarea>
-        <div class="small muted" id="d-note-status">Заметка сохраняется сама</div>
+        <h3 data-i18n="d.whyTitle"></h3>
+        <textarea id="d-note" rows="3" dir="auto" data-i18n-ph="d.whyPh"></textarea>
+        <div class="small muted" id="d-note-status"></div>
       </section>
       <section id="d-watch-info" class="d-section" hidden></section>
       <dl class="d-stats" id="d-stats"></dl>
       <div class="d-links small muted">
-        Подробнее: <a id="d-link-yahoo" target="_blank" rel="noopener">Yahoo Finance</a> ·
+        <span data-i18n="d.more"></span>
+        <a id="d-link-yahoo" target="_blank" rel="noopener">Yahoo Finance</a> ·
         <a id="d-link-cnbc" target="_blank" rel="noopener">CNBC</a> ·
-        <a id="d-link-news" target="_blank" rel="noopener">новости</a>
+        <a id="d-link-news" target="_blank" rel="noopener" data-i18n="d.news"></a>
       </div>
     </div>
   </dialog>
@@ -104,64 +118,64 @@
   <dialog id="tx-dialog" class="sheet narrow" aria-labelledby="tx-title">
     <form id="tx-form" class="sheet-body" novalidate>
       <div class="sheet-head">
-        <h2 id="tx-title">Записать покупку</h2>
-        <button type="button" class="close-btn" data-close aria-label="Закрыть">&times;</button>
+        <h2 id="tx-title"></h2>
+        <button type="button" class="close-btn" data-close data-i18n-aria="close">&times;</button>
       </div>
-      <div class="seg" id="tx-type" role="radiogroup">
-        <button type="button" data-type="buy">Покупка</button>
-        <button type="button" data-type="sell">Продажа</button>
+      <div class="seg" id="tx-type" role="group">
+        <button type="button" data-type="buy" data-i18n="tx.buy"></button>
+        <button type="button" data-type="sell" data-i18n="tx.sell"></button>
       </div>
       <label class="field">
-        <span>Компания</span>
+        <span data-i18n="f.company"></span>
         <div class="search-wrap">
-          <input id="tx-symbol" type="text" placeholder="Тикер или название, например IONQ" autocomplete="off" spellcheck="false">
+          <input id="tx-symbol" type="text" data-i18n-ph="f.companyPhEx" autocomplete="off" spellcheck="false">
           <ul class="suggestions" role="listbox" hidden></ul>
         </div>
         <small id="tx-symbol-name" class="muted"></small>
       </label>
       <label class="field">
-        <span>Дата</span>
+        <span data-i18n="f.date"></span>
         <input id="tx-date" type="date" required>
       </label>
-      <div class="seg small" id="tx-mode" role="radiogroup">
-        <button type="button" data-mode="ils">Знаю сумму в ₪</button>
-        <button type="button" data-mode="shares">Знаю кол-во акций</button>
+      <div class="seg small" id="tx-mode" role="group">
+        <button type="button" data-mode="ils" data-i18n="tx.modeIls"></button>
+        <button type="button" data-mode="shares" data-i18n="tx.modeShares"></button>
       </div>
       <label class="field" id="f-amount">
-        <span id="tx-amount-label">Сумма покупки, ₪ (без комиссии)</span>
+        <span id="tx-amount-label"></span>
         <input id="tx-amount" type="number" step="0.01" min="0" inputmode="decimal" placeholder="150">
       </label>
       <label class="field" id="f-shares" hidden>
-        <span>Сколько акций (можно дробное)</span>
+        <span data-i18n="tx.sharesLabel"></span>
         <input id="tx-shares" type="number" step="any" min="0" inputmode="decimal" placeholder="0.5">
       </label>
       <div class="row2">
         <label class="field">
-          <span>Цена одной акции, $</span>
+          <span data-i18n="tx.priceLabel"></span>
           <input id="tx-price" type="number" step="any" min="0" inputmode="decimal">
           <small class="muted" id="tx-price-hint"></small>
         </label>
         <label class="field">
-          <span>Курс: ₪ за $1</span>
+          <span data-i18n="tx.fxLabel"></span>
           <input id="tx-fx" type="number" step="any" min="0" inputmode="decimal">
           <small class="muted" id="tx-fx-hint"></small>
         </label>
       </div>
       <label class="field">
-        <span>Комиссия брокера, ₪</span>
+        <span data-i18n="tx.feeLabel"></span>
         <input id="tx-fee" type="number" step="0.01" min="0" inputmode="decimal" placeholder="0">
       </label>
       <label class="field" id="f-why">
-        <span>Почему покупаю (по желанию)</span>
-        <textarea id="tx-note" rows="2" placeholder="Коротко, своими словами"></textarea>
+        <span data-i18n="tx.whyLabel"></span>
+        <textarea id="tx-note" rows="2" dir="auto" data-i18n-ph="tx.whyPh"></textarea>
       </label>
       <div class="tx-preview" id="tx-preview"></div>
       <p class="form-error" id="tx-error" hidden></p>
       <div class="sheet-actions">
-        <button type="button" class="btn danger-link" id="tx-delete" hidden>Удалить запись</button>
+        <button type="button" class="btn danger-link" id="tx-delete" data-i18n="tx.delete" hidden></button>
         <span class="spacer"></span>
-        <button type="button" class="btn" data-close>Отмена</button>
-        <button type="submit" class="btn primary" id="tx-submit">Сохранить</button>
+        <button type="button" class="btn" data-close data-i18n="cancel"></button>
+        <button type="submit" class="btn primary" id="tx-submit" data-i18n="save"></button>
       </div>
     </form>
   </dialog>
@@ -170,41 +184,41 @@
   <dialog id="watch-dialog" class="sheet narrow" aria-labelledby="w-title">
     <form id="watch-form" class="sheet-body" novalidate>
       <div class="sheet-head">
-        <h2 id="w-title">Добавить в наблюдение</h2>
-        <button type="button" class="close-btn" data-close aria-label="Закрыть">&times;</button>
+        <h2 id="w-title"></h2>
+        <button type="button" class="close-btn" data-close data-i18n-aria="close">&times;</button>
       </div>
       <label class="field">
-        <span>Компания</span>
+        <span data-i18n="f.company"></span>
         <div class="search-wrap">
-          <input id="w-symbol" type="text" placeholder="Тикер или название" autocomplete="off" spellcheck="false">
+          <input id="w-symbol" type="text" data-i18n-ph="f.companyPh" autocomplete="off" spellcheck="false">
           <ul class="suggestions" role="listbox" hidden></ul>
         </div>
         <small id="w-symbol-name" class="muted"></small>
       </label>
       <label class="field">
-        <span>Чем интересна</span>
-        <textarea id="w-why" rows="4" placeholder="Можно вставить кусок из ежемесячного отчёта"></textarea>
+        <span data-i18n="w.whyLabel"></span>
+        <textarea id="w-why" rows="4" dir="auto" data-i18n-ph="w.whyPh"></textarea>
       </label>
       <div class="row2">
         <label class="field">
-          <span>Риск</span>
+          <span data-i18n="w.riskLabel"></span>
           <select id="w-risk">
-            <option value="">не указан</option>
-            <option value="high">высокий</option>
-            <option value="vhigh">очень высокий</option>
-            <option value="lottery">лотерея</option>
+            <option value="" data-i18n="risk.none"></option>
+            <option value="high" data-i18n="risk.high"></option>
+            <option value="vhigh" data-i18n="risk.vhigh"></option>
+            <option value="lottery" data-i18n="risk.lottery"></option>
           </select>
         </label>
         <label class="field">
-          <span>Откуда узнал</span>
-          <input id="w-source" type="text" placeholder="Отчёт за ноябрь 2026">
+          <span data-i18n="w.sourceLabel"></span>
+          <input id="w-source" type="text" dir="auto">
         </label>
       </div>
       <p class="form-error" id="w-error" hidden></p>
       <div class="sheet-actions">
         <span class="spacer"></span>
-        <button type="button" class="btn" data-close>Отмена</button>
-        <button type="submit" class="btn primary" id="w-submit">Добавить</button>
+        <button type="button" class="btn" data-close data-i18n="cancel"></button>
+        <button type="submit" class="btn primary" id="w-submit"></button>
       </div>
     </form>
   </dialog>
@@ -213,41 +227,59 @@
   <dialog id="settings-dialog" class="sheet narrow" aria-labelledby="s-title">
     <form id="settings-form" class="sheet-body" novalidate>
       <div class="sheet-head">
-        <h2 id="s-title">Настройки</h2>
-        <button type="button" class="close-btn" data-close aria-label="Закрыть">&times;</button>
+        <h2 id="s-title" data-i18n="top.settings"></h2>
+        <button type="button" class="close-btn" data-close data-i18n-aria="close">&times;</button>
       </div>
       <div class="row2">
         <label class="field">
-          <span>Бюджет в месяц, ₪</span>
+          <span data-i18n="s.lang"></span>
+          <select id="s-lang">
+            <option value="ru">Русский</option>
+            <option value="en">English</option>
+          </select>
+        </label>
+        <label class="field">
+          <span data-i18n="s.theme"></span>
+          <select id="s-theme">
+            <option value="auto" data-i18n="s.themeAuto"></option>
+            <option value="light" data-i18n="s.themeLight"></option>
+            <option value="dark" data-i18n="s.themeDark"></option>
+          </select>
+        </label>
+      </div>
+      <div class="row2">
+        <label class="field">
+          <span data-i18n="s.budget"></span>
           <input id="s-budget" type="number" min="0" step="10" inputmode="decimal">
         </label>
         <label class="field">
-          <span>Максимум в одну компанию, %</span>
+          <span data-i18n="s.max"></span>
           <input id="s-max" type="number" min="5" max="100" step="5" inputmode="decimal">
         </label>
       </div>
       <label class="field">
-        <span>Обычная комиссия брокера, ₪</span>
+        <span data-i18n="s.fee"></span>
         <input id="s-fee" type="number" min="0" step="0.5" inputmode="decimal">
-        <small class="muted">Подставляется в каждую новую покупку</small>
+        <small class="muted" data-i18n="s.feeHint"></small>
       </label>
       <div class="d-section">
-        <h3>Резервная копия</h3>
-        <p class="small muted">Все записи хранятся только в этом браузере. Сохраняйте копию в файл время от времени: с ней можно перенести данные на другой компьютер или телефон.</p>
+        <h3 data-i18n="s.backup"></h3>
+        <p class="small muted" data-i18n="s.backupText"></p>
         <div class="btn-row">
-          <button type="button" class="btn" id="s-export">Сохранить копию в файл</button>
-          <label class="btn file-btn">Загрузить из файла<input type="file" id="s-import" accept=".json,application/json" hidden></label>
+          <button type="button" class="btn" id="s-export" data-i18n="s.export"></button>
+          <label class="btn file-btn"><span data-i18n="s.import"></span><input type="file" id="s-import" accept=".json,application/json" hidden></label>
+          <button type="button" class="btn" id="s-csv" data-i18n="s.csv"></button>
         </div>
       </div>
       <div class="d-section">
-        <h3>Опасная зона</h3>
-        <button type="button" class="btn danger-link" id="s-reset">Стереть все данные</button>
+        <h3 data-i18n="s.danger"></h3>
+        <button type="button" class="btn danger-link" id="s-reset" data-i18n="s.reset"></button>
       </div>
-      <p class="small muted">Цены: CNBC (для американских акций в реальном времени). Курс доллара: CNBC и Европейский центробанк. Это не финансовая рекомендация.</p>
+      <p class="small muted" data-i18n="s.about"></p>
       <div class="sheet-actions">
         <span class="spacer"></span>
-        <button type="button" class="btn" data-close>Закрыть</button>
-        <button type="submit" class="btn primary">Сохранить</button>
+        <button type="button" class="btn" data-close data-i18n="close"></button>
+        <button type="submit" class="btn primary" data-i18n="save"></button>
       </div>
     </form>
   </dialog>
@@ -256,30 +288,37 @@
   <dialog id="help-dialog" class="sheet narrow" aria-labelledby="h-title">
     <div class="sheet-body prose">
       <div class="sheet-head">
-        <h2 id="h-title">Как пользоваться</h2>
-        <button type="button" class="close-btn" data-close aria-label="Закрыть">&times;</button>
+        <h2 id="h-title" data-i18n="top.help"></h2>
+        <button type="button" class="close-btn" data-close data-i18n-aria="close">&times;</button>
       </div>
-      <p>«Мои ракеты» — дневник маленьких долгосрочных ставок на молодые компании. Программа ничего не покупает сама: покупаете вы у своего брокера, а сюда записываете, что купили.</p>
-      <h3>Разделы</h3>
-      <ul>
-        <li><b>Портфель</b> — что вы купили, сколько это стоит сейчас в шекелях и во сколько раз выросло. Шкала-ракета показывает путь от ×1 до ×100.</li>
-        <li><b>Наблюдаю</b> — компании-кандидаты, например из ежемесячного отчёта. Видно, как изменилась цена с того дня, как вы начали следить.</li>
-        <li><b>Машина времени</b> — «что было бы, если бы я купил тогда». Можно посчитать разовую покупку или каждый месяц понемногу.</li>
-        <li><b>План</b> — бюджет на месяц, сколько уже вложено и не лежат ли все яйца в одной корзине.</li>
-      </ul>
-      <h3>Словарик</h3>
-      <dl class="glossary">
-        <dt>Тикер</dt><dd>Короткое имя акции на бирже: IONQ, AAPL.</dd>
-        <dt>Рыночная стоимость</dt><dd>Сколько стоит вся компания: цена акции × количество акций. Именно она важна для «ракеты»: компании за $500 млн вырасти в 100 раз гораздо проще, чем компании за $500 млрд.</dd>
-        <dt>Множитель ×</dt><dd>Во сколько раз выросли ваши деньги. ×2 — удвоились, ×0,5 — осталась половина.</dd>
-        <dt>Дробная акция</dt><dd>Многие брокеры продают часть акции, так что 150 ₪ можно вложить в любую компанию, даже дорогую.</dd>
-        <dt>Комиссия</dt><dd>Плата брокеру за сделку. На маленьких суммах она заметна, поэтому её стоит записывать.</dd>
-        <dt>Курс</dt><dd>Американские акции стоят в долларах. Программа переводит всё в шекели по курсу дня покупки и по сегодняшнему курсу.</dd>
-      </dl>
-      <h3>Где хранятся данные</h3>
-      <p>Только в этом браузере, на этом устройстве. Никто, кроме вас, их не видит. Чтобы не потерять записи, иногда сохраняйте копию в файл (кнопка с ползунками → «Резервная копия»).</p>
-      <p class="small muted">Это не финансовая рекомендация. Молодые компании часто разоряются, поэтому вкладывайте только то, что не жалко потерять, и распределяйте деньги по нескольким компаниям.</p>
+      <div data-i18n-html="help.body"></div>
     </div>
+  </dialog>
+
+  <!-- First run -->
+  <dialog id="welcome" class="sheet narrow welcome" aria-labelledby="wl-title">
+    <form id="welcome-form" class="sheet-body" novalidate>
+      <div class="wl-hero">
+        <img src="icons/icon-192.png" width="72" height="72" alt="">
+        <h2 id="wl-title" data-i18n="wl.title"></h2>
+        <p class="muted" data-i18n="wl.text"></p>
+      </div>
+      <div class="wl-langs">
+        <button type="button" class="wl-lang" data-lang="ru"><b>Русский</b><span>RU</span></button>
+        <button type="button" class="wl-lang" data-lang="en"><b>English</b><span>EN</span></button>
+      </div>
+      <ul class="wl-points">
+        <li data-i18n-html="wl.p1"></li>
+        <li data-i18n-html="wl.p2"></li>
+        <li data-i18n-html="wl.p3"></li>
+      </ul>
+      <label class="field">
+        <span data-i18n="wl.budget"></span>
+        <input id="wl-budget" type="number" min="0" step="10" inputmode="decimal">
+      </label>
+      <p class="small muted" data-i18n="wl.privacy"></p>
+      <button type="submit" class="btn primary big-btn" data-i18n="wl.go"></button>
+    </form>
   </dialog>
 
   <script type="module" src="js/app.js"></script>

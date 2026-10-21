@@ -1,7 +1,8 @@
 // Small DOM helpers shared by all screens.
 
-import { searchSymbols } from './api.js';
+import { searchSymbols, logoUrl } from './api.js';
 import { esc } from './format.js';
+import { t } from './i18n.js';
 
 export const $ = (sel, root = document) => root.querySelector(sel);
 export const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
@@ -13,6 +14,10 @@ export const ICONS = {
   target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.3"/>',
   chart: '<path d="M3 17l5-6 4 3 8-9"/><path d="M3 21h18"/>',
   plus: '<path d="M12 5v14M5 12h14"/>',
+  table: '<path d="M3 5h18v14H3z"/><path d="M3 10h18M3 15h18M9 5v14"/>',
+  cards: '<rect x="3" y="4" width="8" height="7" rx="1.5"/><rect x="13" y="4" width="8" height="7" rx="1.5"/><rect x="3" y="13" width="8" height="7" rx="1.5"/><rect x="13" y="13" width="8" height="7" rx="1.5"/>',
+  copy: '<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/>',
+  download: '<path d="M12 4v11M7 10l5 5 5-5"/><path d="M4 20h16"/>',
   trash: '<path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13"/>',
   edit: '<path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/>',
   cart: '<path d="M3 4h2.5l2.2 10.5h10.6L20.5 7H7"/><circle cx="9.5" cy="19" r="1.4"/><circle cx="17" cy="19" r="1.4"/>',
@@ -21,7 +26,34 @@ export const ICONS = {
 export const icon = (name, size = 18) =>
   `<svg class="ico" viewBox="0 0 24 24" width="${size}" height="${size}" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]}</svg>`;
 
-export const logoLetter = (symbol) => esc((symbol.replace(/^\d+/, '')[0] || symbol[0] || '?').toUpperCase());
+const letter = (symbol) => esc((symbol.replace(/^[\d.]+/, '')[0] || symbol[0] || '?').toUpperCase());
+
+// Logo images that loaded or failed, so re-renders don't flicker or retry.
+const logoOk = new Set(), logoBad = new Set();
+
+// A letter tile, with the company's logo over it once (and if) it loads.
+export function logo(symbol) {
+  const img = logoBad.has(symbol) ? ''
+    : `<img class="logo-img${logoOk.has(symbol) ? ' ok' : ''}" src="${esc(logoUrl(symbol))}" alt="" loading="lazy" data-logo="${esc(symbol)}">`;
+  return `<div class="logo"><span>${letter(symbol)}</span>${img}</div>`;
+}
+
+export function setupLogos() {
+  document.addEventListener('load', (e) => {
+    const img = e.target;
+    if (!img.dataset || !img.dataset.logo) return;
+    // Some services answer unknown tickers with a 1×1 placeholder.
+    if (img.naturalWidth < 8) { logoBad.add(img.dataset.logo); img.remove(); return; }
+    logoOk.add(img.dataset.logo);
+    img.classList.add('ok');
+  }, true);
+  document.addEventListener('error', (e) => {
+    const img = e.target;
+    if (!img.dataset || !img.dataset.logo) return;
+    logoBad.add(img.dataset.logo);
+    img.remove();
+  }, true);
+}
 
 // ---------- toast ----------
 
@@ -30,6 +62,7 @@ export function toast(message, undo) {
   const el = $('#toast');
   $('.msg', el).textContent = message;
   const btn = $('.undo', el);
+  btn.textContent = t('undo');
   btn.hidden = !undo;
   btn.onclick = undo ? () => { undo(); el.hidden = true; } : null;
   el.hidden = false;

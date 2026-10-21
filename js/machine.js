@@ -1,72 +1,75 @@
-// "Машина времени": what a past purchase (once or every month) would be worth today.
+// Time machine: what a past purchase (once or every month) would be worth today.
 
 import { prefs, savePrefs, data } from './store.js';
 import { live } from './live.js';
 import { fetchBars, barIso, fxOn } from './api.js';
 import { simulate } from './calc.js';
 import { createChart } from './chart.js';
-import { fmtIls, fmtMult, fmtPct, fmtUsd, fmtDate, fmtYears, fmtNum, todayIso, esc, plural, LOCALE } from './format.js';
-import { $, attachSearch, icon } from './ui.js';
+import { fmtIls, fmtIlsShort, fmtMult, fmtPct, fmtUsd, fmtDate, fmtYears, fmtNum, todayIso, esc } from './format.js';
+import { t, tp } from './i18n.js';
+import { $, attachSearch, icon, toast } from './ui.js';
+import { unlockFlag } from './achievements.js';
 import { actions } from './bus.js';
 
 const PRESETS = [
-  { symbol: 'AAPL', name: 'Apple', date: '1980-12-12', label: 'Apple, 1980' },
-  { symbol: 'MSFT', name: 'Microsoft', date: '1986-03-13', label: 'Microsoft, 1986' },
-  { symbol: 'AMZN', name: 'Amazon', date: '1997-05-15', label: 'Amazon, 1997' },
-  { symbol: 'NVDA', name: 'NVIDIA', date: '1999-01-22', label: 'Nvidia, 1999' },
-  { symbol: 'NFLX', name: 'Netflix', date: '2002-05-23', label: 'Netflix, 2002' },
-  { symbol: 'TSLA', name: 'Tesla', date: '2010-06-29', label: 'Tesla, 2010' },
+  { symbol: 'AAPL', name: 'Apple', date: '1980-12-12' },
+  { symbol: 'MSFT', name: 'Microsoft', date: '1986-03-13' },
+  { symbol: 'AMZN', name: 'Amazon', date: '1997-05-15' },
+  { symbol: 'NVDA', name: 'NVIDIA', date: '1999-01-22' },
+  { symbol: 'NFLX', name: 'Netflix', date: '2002-05-23' },
+  { symbol: 'TSLA', name: 'Tesla', date: '2010-06-29' },
 ];
 
 const MAX_POINTS = 1200;
 const INDEX = '.SPX';
 
 const form = () => ({
-  symbol: 'AAPL', name: 'Apple', date: '1980-12-12', amount: 1000, monthly: false,
+  symbol: 'AAPL', name: 'Apple', date: '1980-12-12', amount: 1000, monthly: false, log: false,
   ...(prefs.machine || {}),
 });
 
-let chart = null;
 let seq = 0;
+let lastText = '';
 
 export function renderMachine(el) {
   const f = form();
   el.innerHTML = `
     <div class="section-head">
       <div>
-        <h2>Машина времени</h2>
-        <p class="muted small">Что было бы, если бы тогда… Цены учитывают дробления акций; шекели — по сегодняшнему курсу.</p>
+        <h2>${t('tab.machine')}</h2>
+        <p class="muted small">${t('tm.subtitle')}</p>
       </div>
     </div>
     <div class="card tm-form">
       <div class="chips" id="tm-presets">
-        ${PRESETS.map((p, i) => `<button type="button" class="chip" data-preset="${i}">${p.label}</button>`).join('')}
+        ${PRESETS.map((p, i) => `<button type="button" class="chip" data-preset="${i}">${esc(p.name)}, ${p.date.slice(0, 4)}</button>`).join('')}
+        ${data.watch.slice(0, 4).map((w) => `<button type="button" class="chip mine" data-watch="${esc(w.symbol)}" title="${esc(t('tm.fromWatch'))}">${esc(w.symbol)}</button>`).join('')}
       </div>
       <form id="tm" class="tm-fields" novalidate>
         <label class="field grow">
-          <span>Компания</span>
+          <span>${t('f.company')}</span>
           <div class="search-wrap">
-            <input id="tm-symbol" type="text" value="${esc(f.symbol)}" autocomplete="off" spellcheck="false" placeholder="Тикер или название">
+            <input id="tm-symbol" type="text" value="${esc(f.symbol)}" autocomplete="off" spellcheck="false" placeholder="${esc(t('f.companyPh'))}">
             <ul class="suggestions" role="listbox" hidden></ul>
           </div>
           <small class="muted" id="tm-name">${esc(f.name || data.names[f.symbol] || '')}</small>
         </label>
         <label class="field">
-          <span>Когда</span>
+          <span>${t('tm.when')}</span>
           <input id="tm-date" type="date" value="${esc(f.date)}" max="${todayIso()}" min="1970-01-01">
         </label>
         <label class="field">
-          <span>Сколько, ₪</span>
+          <span>${t('tm.amount')}</span>
           <input id="tm-amount" type="number" min="1" step="10" value="${esc(f.amount)}" inputmode="decimal">
         </label>
         <div class="field">
-          <span>Как</span>
+          <span>${t('tm.how')}</span>
           <div class="seg" id="tm-mode">
-            <button type="button" data-monthly="0" aria-pressed="${!f.monthly}">один раз</button>
-            <button type="button" data-monthly="1" aria-pressed="${f.monthly}">каждый месяц</button>
+            <button type="button" data-monthly="0" aria-pressed="${!f.monthly}">${t('tm.once')}</button>
+            <button type="button" data-monthly="1" aria-pressed="${f.monthly}">${t('tm.monthly')}</button>
           </div>
         </div>
-        <button type="submit" class="btn primary tm-go">${icon('clock')} Посчитать</button>
+        <button type="submit" class="btn primary tm-go">${icon('clock')} ${t('tm.go')}</button>
       </form>
     </div>
     <div id="tm-result"></div>`;
@@ -81,13 +84,21 @@ export function renderMachine(el) {
   input.addEventListener('change', () => { $('#tm-name', el).textContent = ''; });
 
   $('#tm-presets', el).addEventListener('click', (e) => {
-    const b = e.target.closest('[data-preset]');
+    const b = e.target.closest('[data-preset], [data-watch]');
     if (!b) return;
-    const p = PRESETS[+b.dataset.preset];
-    input.value = p.symbol;
-    $('#tm-name', el).textContent = p.name;
-    $('#tm-date', el).value = p.date;
-    remember({ symbol: p.symbol, name: p.name, date: p.date });
+    if (b.dataset.watch) {
+      // A candidate: what if I had bought it five years ago (or at its listing)?
+      const d = new Date();
+      d.setFullYear(d.getFullYear() - 5);
+      input.value = b.dataset.watch;
+      $('#tm-name', el).textContent = data.names[b.dataset.watch] || '';
+      $('#tm-date', el).value = d.toISOString().slice(0, 10);
+    } else {
+      const p = PRESETS[+b.dataset.preset];
+      input.value = p.symbol;
+      $('#tm-name', el).textContent = p.name;
+      $('#tm-date', el).value = p.date;
+    }
     run(el);
   });
 
@@ -97,9 +108,10 @@ export function renderMachine(el) {
     $('#tm-mode', el).querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', x === b));
     const monthly = b.dataset.monthly === '1';
     const amount = $('#tm-amount', el);
-    // Switching modes swaps between a lump sum and a monthly budget-sized amount.
-    if (monthly && +amount.value === 1000) amount.value = data.settings.budget || 150;
-    if (!monthly && +amount.value === (data.settings.budget || 150)) amount.value = 1000;
+    const budget = data.settings.budget || 150;
+    // Switching modes swaps between a lump sum and a budget-sized monthly amount.
+    if (monthly && +amount.value === 1000) amount.value = budget;
+    if (!monthly && +amount.value === budget) amount.value = 1000;
     run(el);
   });
 
@@ -119,6 +131,7 @@ function readForm(el) {
     date: $('#tm-date', el).value,
     amount: +$('#tm-amount', el).value,
     monthly: $('#tm-mode [aria-pressed="true"]', el)?.dataset.monthly === '1',
+    log: form().log,
   };
 }
 
@@ -130,16 +143,15 @@ function downsample(n) {
   return [...new Set(idx)];
 }
 
+const fail = (out, key, vars) => { out.innerHTML = `<div class="card muted tm-msg">${t(key, vars)}</div>`; };
+
 async function run(el) {
   const f = readForm(el);
   const out = $('#tm-result', el);
-  if (!f.symbol || !f.date || !(f.amount > 0)) {
-    out.innerHTML = '<p class="form-error">Укажите компанию, дату и сумму.</p>';
-    return;
-  }
+  if (!f.symbol || !f.date || !(f.amount > 0)) { out.innerHTML = `<p class="form-error">${t('tm.needAll')}</p>`; return; }
   remember(f);
   const my = ++seq;
-  out.innerHTML = '<div class="card tm-loading muted">Летим в прошлое…</div>';
+  out.innerHTML = `<div class="card tm-loading muted"><span class="spin"></span> ${t('tm.loading')}</div>`;
 
   let bars, index, fx = live.fx;
   try {
@@ -151,24 +163,17 @@ async function run(el) {
     ]);
   } catch (err) {
     console.warn(err);
-    if (my === seq) out.innerHTML = '<div class="card muted">Не удалось загрузить историю цен. Проверьте интернет и попробуйте ещё раз.</div>';
+    if (my === seq) fail(out, 'tm.noHistory');
     return;
   }
   if (my !== seq) return;
-  if (!bars.length) {
-    out.innerHTML = `<div class="card muted">Для «${esc(f.symbol)}» нет истории цен. Проверьте тикер.</div>`;
-    return;
-  }
-  if (!fx) {
-    out.innerHTML = '<div class="card muted">Не удалось узнать курс доллара. Попробуйте чуть позже.</div>';
-    return;
-  }
+  if (!bars.length) return fail(out, 'tm.noTicker', { s: esc(f.symbol) });
+  if (!fx) return fail(out, 'tm.noFx');
 
-  const sim = simulate(bars, f.date, f.amount / fx, f.monthly, barIso);
-  if (!sim || sim.bars.length < 2) {
-    out.innerHTML = `<div class="card muted">Эта дата слишком близко к сегодняшнему дню — пока нечего считать. Выберите дату раньше.</div>`;
-    return;
-  }
+  const sim = simulate(bars, f.date, f.amount / fx, f.monthly);
+  if (!sim || sim.bars.length < 2) return fail(out, 'tm.tooRecent');
+  unlockFlag('timetravel');
+
   const firstIso = barIso(sim.bars[0].d);
   const late = barIso(bars[0].d) > f.date;
   const ils = (usd) => usd * fx;
@@ -177,73 +182,96 @@ async function run(el) {
   const dd = sim.drawdown;
   const ddFrom = barIso(sim.bars[dd.peak].d), ddTo = barIso(sim.bars[dd.low].d);
   const recoverYears = dd.recover != null ? (sim.bars[dd.recover].t - sim.bars[dd.peak].t) / (365.25 * 86_400_000) : null;
+  const months = f.monthly ? Math.round(sim.put / (f.amount / fx)) : 0;
+  const my2 = { month: 'short', year: 'numeric' };
+
   // Same plan in the S&P 500, over exactly the same dates.
   let idx = null;
   if (index && index.length && barIso(index[0].d) <= firstIso) {
-    idx = simulate(index, firstIso, f.amount / fx, f.monthly, barIso);
+    idx = simulate(index, firstIso, f.amount / fx, f.monthly);
     if (idx && idx.bars.length < 2) idx = null;
   }
-  const months = f.monthly ? Math.round(sim.put / (f.amount / fx)) : 0;
+
+  const headline = f.monthly
+    ? t('tm.headMonthly', { d: fmtDate(firstIso), a: fmtIls(f.amount), name: esc(name), count: tp('tm.contributions', months), total: fmtIls(ils(sim.put)) })
+    : t('tm.headOnce', { d: fmtDate(firstIso), a: fmtIls(f.amount), name: esc(name) });
+  lastText = t('tm.shareText', {
+    head: headline.replace(/<[^>]+>/g, ''), v: fmtIls(ils(sim.end)), m: fmtMult(sim.mult), y: fmtYears(sim.years),
+  });
 
   out.innerHTML = `
     <div class="card tm-result">
       <div class="tm-headline">
-        <p>${f.monthly
-          ? `Если бы начиная с <b>${fmtDate(firstIso)}</b> каждый месяц вкладывали <b>${fmtIls(f.amount)}</b> в <b>${esc(name)}</b> (${months} ${plural(months, 'взнос', 'взноса', 'взносов')}, всего ${fmtIls(ils(sim.put))}),`
-          : `Если бы <b>${fmtDate(firstIso)}</b> вы вложили <b>${fmtIls(f.amount)}</b> в <b>${esc(name)}</b>,`}</p>
-        <div class="tm-big" data-dir="${up ? 'up' : 'down'}">сегодня было бы <span>${fmtIls(ils(sim.end))}</span></div>
-        <div class="tm-mult"><b data-dir="${up ? 'up' : 'down'}">${fmtMult(sim.mult)}</b> за ${fmtYears(sim.years)}</div>
+        <p>${headline}</p>
+        <div class="tm-big" data-dir="${up ? 'up' : 'down'}">${t('tm.todayWould')} <span>${fmtIls(ils(sim.end))}</span></div>
+        <div class="tm-mult"><b data-dir="${up ? 'up' : 'down'}">${fmtMult(sim.mult)}</b> ${t('tm.inYears', { y: fmtYears(sim.years) })}</div>
       </div>
       <dl class="tm-stats">
-        <div><dt class="muted">Цена акции тогда → сейчас</dt><dd>${fmtUsd(sim.startPrice)} → ${fmtUsd(sim.endPrice)}</dd></div>
-        ${sim.cagr != null ? `<div><dt class="muted">В среднем в год</dt><dd data-dir="${sim.cagr >= 0 ? 'up' : 'down'}">${fmtPct(sim.cagr)}</dd></div>` : ''}
-        <div><dt class="muted">Самое страшное падение</dt><dd data-dir="down">${dd.pct > 0.5 ? fmtPct(-dd.pct, 0) : 'не было'}</dd>
-          ${dd.pct > 0.5 ? `<small class="muted">${fmtDate(ddFrom, { month: 'short', year: 'numeric' })} → ${fmtDate(ddTo, { month: 'short', year: 'numeric' })}</small>` : ''}</div>
-        <div><dt class="muted">Вернулась к прежнему максимуму</dt><dd>${dd.pct <= 0.5 ? '—' : recoverYears != null ? 'через ' + fmtYears(recoverYears) : 'ещё не вернулась'}</dd></div>
-        ${idx ? `<div><dt class="muted">А если бы в индекс S&amp;P 500</dt><dd>${fmtIls(ils(idx.end))} <span class="muted">(${fmtMult(idx.mult)})</span></dd>
-          <small class="muted">500 крупнейших компаний США — спокойный вариант для сравнения</small></div>` : ''}
+        <div><dt class="muted">${t('tm.priceThenNow')}</dt><dd>${fmtUsd(sim.startPrice)} → ${fmtUsd(sim.endPrice)}</dd></div>
+        ${sim.cagr != null ? `<div><dt class="muted">${t('tm.perYear')}</dt><dd data-dir="${sim.cagr >= 0 ? 'up' : 'down'}">${fmtPct(sim.cagr)}</dd></div>` : ''}
+        <div><dt class="muted">${t('tm.worstFall')}</dt><dd data-dir="down">${dd.pct > 0.5 ? fmtPct(-dd.pct, 0) : t('tm.none')}</dd>
+          ${dd.pct > 0.5 ? `<small class="muted">${fmtDate(ddFrom, my2)} → ${fmtDate(ddTo, my2)}</small>` : ''}</div>
+        <div><dt class="muted">${t('tm.recovered')}</dt><dd>${dd.pct <= 0.5 ? '—' : recoverYears != null ? t('tm.after', { y: fmtYears(recoverYears) }) : t('tm.notYet')}</dd></div>
+        ${idx ? `<div><dt class="muted">${t('tm.index')}</dt><dd>${fmtIls(ils(idx.end))} <span class="muted">(${fmtMult(idx.mult)})</span></dd>
+          <small class="muted">${t('tm.indexHint')}</small></div>` : ''}
       </dl>
+      <div class="tm-chart-head">
+        <label class="switch small"><input type="checkbox" id="tm-log"${f.log ? ' checked' : ''}><span></span>${t('tm.log')}</label>
+      </div>
       <div class="chart-wrap tm-chart" id="tm-chart">
         <svg aria-hidden="true"></svg>
         <div class="chart-tip" hidden><span class="tip-main"></span><span class="tip-sub muted"></span></div>
         <p class="chart-msg muted" hidden></p>
       </div>
       <div class="chart-legend small muted">
-        <span><i class="lg val"></i>стоимость вложений</span>
-        <span><i class="lg put"></i>сколько вложено</span>
+        <span><i class="lg val"></i>${t('tm.legendValue')}</span>
+        <span><i class="lg put"></i>${t('tm.legendPut')}</span>
+        ${idx ? `<span><i class="lg idx"></i>S&amp;P 500</span>` : ''}
       </div>
-      ${dd.pct >= 40 ? `<p class="tm-lesson">Чтобы получить этот результат, нужно было пережить падение на ${fmtNum(dd.pct, 0, 0)} % и не продать. Это самое трудное в «ракетах».</p>` : ''}
-      ${late ? `<p class="small muted">История цен для ${esc(f.symbol)} есть только с ${fmtDate(barIso(bars[0].d))}, поэтому расчёт начинается с этой даты.</p>` : ''}
-      <p class="small muted">Без учёта дивидендов, налогов и комиссий. Курс: $1 = ${fmtNum(fx, 3, 3)} ₪. ${!up ? '' : 'Помните: такие истории видны только задним числом — рядом были сотни компаний, которые исчезли.'}</p>
+      ${dd.pct >= 40 ? `<p class="tm-lesson">${t('tm.lesson', { p: fmtNum(dd.pct, 0, 0) })}</p>` : ''}
+      ${late ? `<p class="small muted">${t('tm.late', { s: esc(f.symbol), d: fmtDate(barIso(bars[0].d)) })}</p>` : ''}
+      <p class="small muted">${t('tm.note', { fx: fmtNum(fx, 3, 3) })}${up ? ' ' + t('tm.hindsight') : ''}</p>
       <div class="btn-row">
-        <button type="button" class="btn" id="tm-open">${icon('chart', 16)} График ${esc(f.symbol)}</button>
+        <button type="button" class="btn" id="tm-open">${icon('chart', 16)} ${t('tm.openChart', { s: esc(f.symbol) })}</button>
+        <button type="button" class="btn" id="tm-copy">${icon('copy', 16)} ${t('tm.copy')}</button>
       </div>
     </div>`;
 
   $('#tm-open', out).addEventListener('click', () => actions.openDetail(f.symbol));
+  $('#tm-copy', out).addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(lastText); toast(t('tm.copied')); }
+    catch { toast(t('tm.copyFail')); }
+  });
 
   const keep = downsample(sim.bars.length);
   const pts = keep.map((i) => ({ b: sim.bars[i], v: ils(sim.value[i]), put: ils(sim.invested[i]) }));
-  const yearFmt = new Intl.DateTimeFormat(LOCALE, { year: 'numeric', timeZone: 'UTC' });
-  const spanYears = sim.years;
-  const xFmt = spanYears > 2 ? yearFmt : new Intl.DateTimeFormat(LOCALE, { month: 'short', year: '2-digit', timeZone: 'UTC' });
-  const when = (b) => new Date(Date.UTC(+b.d.slice(0, 4), +b.d.slice(4, 6) - 1, +b.d.slice(6, 8)));
-  chart = createChart($('#tm-chart', out));
-  chart.draw({
+  // The index line, matched to the same dates.
+  let idxVals = null;
+  if (idx) {
+    let j = 0;
+    idxVals = pts.map((p) => {
+      const d = barIso(p.b.d);
+      while (j + 1 < idx.bars.length && barIso(idx.bars[j + 1].d) <= d) j++;
+      return ils(idx.value[j]);
+    });
+  }
+  const xOpts = sim.years > 2 ? { year: 'numeric' } : { month: 'short', year: '2-digit' };
+  const chart = createChart($('#tm-chart', out));
+  const draw = (log) => chart.draw({
     n: pts.length,
+    log,
     series: [
       { values: pts.map((p) => p.v), color: up ? 'var(--up)' : 'var(--down)', fill: true },
       { values: pts.map((p) => p.put), color: 'var(--muted)', dashed: true, width: 1.5 },
+      ...(idxVals ? [{ values: idxVals, color: 'var(--idx)', width: 1.5 }] : []),
     ],
-    yFmt: (v) => shortIls(v),
-    xLabel: (i) => xFmt.format(when(pts[i].b)).replace(/\s?г\.$/, ''),
-    tip: (i) => [fmtIls(pts[i].v), fmtDate(barIso(pts[i].b.d)) + ' · вложено ' + fmtIls(pts[i].put)],
+    yFmt: (v) => fmtIlsShort(v),
+    xLabel: (i) => fmtDate(barIso(pts[i].b.d), xOpts),
+    tip: (i) => [fmtIls(pts[i].v), `${fmtDate(barIso(pts[i].b.d))} · ${t('tm.put')} ${fmtIls(pts[i].put)}${idxVals ? ' · S&P ' + fmtIls(idxVals[i]) : ''}`],
   });
-}
-
-// Axis labels: 950 ₪, 12 тыс. ₪, 2,3 млн ₪
-function shortIls(v) {
-  if (v >= 1e6) return fmtNum(v / 1e6, v >= 1e7 ? 0 : 1, 0) + ' млн ₪';
-  if (v >= 1e4) return fmtNum(v / 1e3, 0, 0) + ' тыс. ₪';
-  return fmtNum(v, 0, 0) + ' ₪';
+  draw(f.log);
+  $('#tm-log', out).addEventListener('change', (e) => {
+    remember({ log: e.target.checked });
+    draw(e.target.checked);
+  });
 }

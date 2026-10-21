@@ -4,7 +4,9 @@
 const KEY = 'rk.data';
 const PREFS = 'rk.prefs';
 
-export const DEFAULT_RULES = [
+// The Russian defaults, as saved by the first version; such a list means
+// "never edited", so it follows the interface language.
+const OLD_DEFAULT_RULES = [
   'Вкладываю только деньги, которые не жалко потерять.',
   'Не кладу больше 30% всех денег в одну компанию.',
   'Держу минимум 2 года и не продаю в панике, когда акция падает.',
@@ -20,7 +22,8 @@ function defaults() {
     watch: [],    // { symbol, added, addedPrice, why, risk, source }
     names: {},    // symbol -> company name
     notes: {},    // symbol -> "why I believe in it"
-    rules: [...DEFAULT_RULES],
+    rules: null,  // null = the default rules in the current language
+    achievements: {}, // id -> 'YYYY-MM-DD' unlocked
   };
 }
 
@@ -88,12 +91,20 @@ function normalize(raw) {
     watch,
     names: raw.names && typeof raw.names === 'object' ? { ...raw.names } : {},
     notes: raw.notes && typeof raw.notes === 'object' ? { ...raw.notes } : {},
-    rules: Array.isArray(raw.rules) ? raw.rules.map(String).filter((r) => r.trim()) : [...DEFAULT_RULES],
+    rules: Array.isArray(raw.rules) && JSON.stringify(raw.rules) !== JSON.stringify(OLD_DEFAULT_RULES)
+      ? raw.rules.map(String).filter((r) => r.trim())
+      : null,
+    achievements: raw.achievements && typeof raw.achievements === 'object' ? { ...raw.achievements } : {},
   };
 }
 
 export const data = normalize(read(KEY));
-export const prefs = { tab: 'portfolio', range: '1Y', machine: null, ...(read(PREFS) || {}) };
+// Per-device interface choices; not part of the backup.
+export const prefs = {
+  tab: 'portfolio', range: '1Y', machine: null, lang: null, theme: 'auto', privacy: false,
+  pfView: 'cards', pfSort: 'value', histRange: 'ALL', welcomed: false,
+  ...(read(PREFS) || {}),
+};
 
 // Check once that writes actually stick (Safari private mode etc.).
 try {

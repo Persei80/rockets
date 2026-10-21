@@ -159,3 +159,30 @@ export async function fxOn(iso) {
   }
   return null;
 }
+
+// Daily USD/ILS for a span of dates: { 'YYYY-MM-DD': rate } (business days only).
+const seriesCache = new Map();
+export async function fxSeries(fromIso) {
+  if (seriesCache.has(fromIso)) return seriesCache.get(fromIso);
+  const urls = [
+    `https://api.frankfurter.dev/v1/${fromIso}..?base=USD&symbols=ILS`,
+    `https://api.frankfurter.app/${fromIso}..?from=USD&to=ILS`,
+  ];
+  for (const url of urls) {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) continue;
+      const data = await res.json();
+      const out = {};
+      for (const [d, r] of Object.entries(data?.rates || {})) if (+r?.ILS > 0) out[d] = +r.ILS;
+      if (Object.keys(out).length) {
+        seriesCache.set(fromIso, out);
+        return out;
+      }
+    } catch {}
+  }
+  return null;
+}
+
+// Company logos from a free public image service; the app falls back to a letter.
+export const logoUrl = (symbol) => `https://financialmodelingprep.com/image-stock/${encodeURIComponent(symbol)}.png`;
