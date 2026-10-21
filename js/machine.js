@@ -19,6 +19,7 @@ const PRESETS = [
 ];
 
 const MAX_POINTS = 1200;
+const INDEX = '.SPX';
 
 const form = () => ({
   symbol: 'AAPL', name: 'Apple', date: '1980-12-12', amount: 1000, monthly: false,
@@ -140,9 +141,14 @@ async function run(el) {
   const my = ++seq;
   out.innerHTML = '<div class="card tm-loading muted">Летим в прошлое…</div>';
 
-  let bars, fx = live.fx;
+  let bars, index, fx = live.fx;
   try {
-    [bars, fx] = await Promise.all([fetchBars(f.symbol, 'ALL'), fx ? fx : fxOn(null)]);
+    [bars, fx, index] = await Promise.all([
+      fetchBars(f.symbol, 'ALL'),
+      fx ? fx : fxOn(null),
+      // The index comparison is a bonus; never let it break the main result.
+      f.symbol === INDEX ? null : fetchBars(INDEX, 'ALL').catch(() => null),
+    ]);
   } catch (err) {
     console.warn(err);
     if (my === seq) out.innerHTML = '<div class="card muted">Не удалось загрузить историю цен. Проверьте интернет и попробуйте ещё раз.</div>';
@@ -171,6 +177,12 @@ async function run(el) {
   const dd = sim.drawdown;
   const ddFrom = barIso(sim.bars[dd.peak].d), ddTo = barIso(sim.bars[dd.low].d);
   const recoverYears = dd.recover != null ? (sim.bars[dd.recover].t - sim.bars[dd.peak].t) / (365.25 * 86_400_000) : null;
+  // Same plan in the S&P 500, over exactly the same dates.
+  let idx = null;
+  if (index && index.length && barIso(index[0].d) <= firstIso) {
+    idx = simulate(index, firstIso, f.amount / fx, f.monthly, barIso);
+    if (idx && idx.bars.length < 2) idx = null;
+  }
   const months = f.monthly ? Math.round(sim.put / (f.amount / fx)) : 0;
 
   out.innerHTML = `
@@ -188,6 +200,8 @@ async function run(el) {
         <div><dt class="muted">Самое страшное падение</dt><dd data-dir="down">${dd.pct > 0.5 ? fmtPct(-dd.pct, 0) : 'не было'}</dd>
           ${dd.pct > 0.5 ? `<small class="muted">${fmtDate(ddFrom, { month: 'short', year: 'numeric' })} → ${fmtDate(ddTo, { month: 'short', year: 'numeric' })}</small>` : ''}</div>
         <div><dt class="muted">Вернулась к прежнему максимуму</dt><dd>${dd.pct <= 0.5 ? '—' : recoverYears != null ? 'через ' + fmtYears(recoverYears) : 'ещё не вернулась'}</dd></div>
+        ${idx ? `<div><dt class="muted">А если бы в индекс S&amp;P 500</dt><dd>${fmtIls(ils(idx.end))} <span class="muted">(${fmtMult(idx.mult)})</span></dd>
+          <small class="muted">500 крупнейших компаний США — спокойный вариант для сравнения</small></div>` : ''}
       </dl>
       <div class="chart-wrap tm-chart" id="tm-chart">
         <svg aria-hidden="true"></svg>

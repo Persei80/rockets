@@ -42,7 +42,6 @@ export function createChart(wrap) {
     const W = wrap.clientWidth, H = wrap.clientHeight;
     if (!W || !H) return;
     const m = { top: 12, right: 66, bottom: 26, left: 4 };
-    const iw = W - m.left - m.right, ih = H - m.top - m.bottom;
     const n = opts.n;
 
     let min = Infinity, max = -Infinity;
@@ -52,13 +51,17 @@ export function createChart(wrap) {
     const pad = (max - min) * 0.07 || max * 0.02 || 1;
     min = Math.max(0, min - pad); max += pad;
 
+    const yTicks = niceTicks(min, max, H < 240 ? 3 : 4);
+    const yLabels = yTicks.map(opts.yFmt);
+    // Leave room on the right for the longest price label.
+    m.right = Math.max(44, Math.ceil(Math.max(...yLabels.map((l) => l.length)) * 7.2) + 10);
+    const iw = W - m.left - m.right, ih = H - m.top - m.bottom;
     const x = (i) => m.left + (i / (n - 1)) * iw;
     const y = (v) => m.top + (1 - (v - min) / (max - min)) * ih;
 
-    const yTicks = niceTicks(min, max, H < 240 ? 3 : 4);
-    let out = yTicks.map((v) => `
+    let out = yTicks.map((v, k) => `
       <line class="gl" x1="${m.left}" x2="${m.left + iw}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}"></line>
-      <text class="ylab" x="${W - 4}" y="${(y(v) + 4).toFixed(1)}" text-anchor="end">${opts.yFmt(v)}</text>`).join('');
+      <text class="ylab" x="${W - 4}" y="${(y(v) + 4).toFixed(1)}" text-anchor="end">${yLabels[k]}</text>`).join('');
 
     if (opts.baseline != null) {
       out += `<line class="baseline" x1="${m.left}" x2="${m.left + iw}" y1="${y(opts.baseline).toFixed(1)}" y2="${y(opts.baseline).toFixed(1)}"></line>`;
