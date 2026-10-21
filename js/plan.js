@@ -1,0 +1,168 @@
+// "План": the monthly budget, the habit, and how the money is spread.
+
+import { data, save } from './store.js';
+import { live } from './live.js';
+import { positions, valuePositions, spentByMonth } from './calc.js';
+import { fmtIls, fmtNum, monthName, monthShort, fmtDate, isoDate, todayIso, esc, plural } from './format.js';
+import { icon } from './ui.js';
+import { actions } from './bus.js';
+
+let editingRules = false;
+
+const ym = (d) => isoDate(d).slice(0, 7);
+
+function lastMonths(n) {
+  const out = [];
+  const d = new Date();
+  d.setDate(1);
+  for (let i = 0; i < n; i++) {
+    out.unshift(ym(d));
+    d.setMonth(d.getMonth() - 1);
+  }
+  return out;
+}
+
+// Months in a row with at least one purchase, ending this month or last.
+function streak(spent) {
+  const d = new Date();
+  d.setDate(1);
+  if (!spent[ym(d)]) d.setMonth(d.getMonth() - 1);
+  let n = 0;
+  while (spent[ym(d)]) { n++; d.setMonth(d.getMonth() - 1); }
+  return n;
+}
+
+function nextReport() {
+  const firstSat = (y, m) => { const d = new Date(y, m, 1); d.setDate(1 + ((6 - d.getDay() + 7) % 7)); return d; };
+  const now = new Date();
+  let d = firstSat(now.getFullYear(), now.getMonth());
+  if (isoDate(d) < todayIso()) d = firstSat(now.getFullYear(), now.getMonth() + 1);
+  return isoDate(d);
+}
+
+function monthBars(spent, budget) {
+  const months = lastMonths(12);
+  const vals = months.map((m) => spent[m] || 0);
+  const max = Math.max(budget * 1.25, ...vals, 1);
+  const h = (v) => ((v / max) * 100).toFixed(1) + '%';
+  return `
+    <div class="mbars" role="img" aria-label="Вложения по месяцам за последний год">
+      <div class="mbars-area">
+        ${budget > 0 ? `<div class="mbudget" style="bottom:${h(budget)}"><span>бюджет ${fmtNum(budget, 0, 0)} ₪</span></div>` : ''}
+        ${vals.map((v, i) => `<div class="mcol" title="${monthName(months[i])}: ${fmtIls(v)}">
+          <span class="mbar${v && budget > 0 && v > budget * 1.001 ? ' over' : ''}${v ? '' : ' zero'}" style="height:${v ? h(v) : '2px'}"></span></div>`).join('')}
+      </div>
+      <div class="mlabels">${months.map((m) => `<span>${monthShort(m)}</span>`).join('')}</div>
+    </div>`;
+}
+
+function spread() {
+  const list = valuePositions(positions(data.txs), live.quotes, live.fx).filter((p) => p.open);
+  if (!list.length) return '';
+  const val = (p) => p.valueIls ?? p.costIls;
+  const total = list.reduce((s, p) => s + val(p), 0) || 1;
+  list.sort((a, b) => val(b) - val(a));
+  const max = data.settings.maxShare || 30;
+  const heavy = list.filter((p) => (val(p) / total) * 100 > max);
+  return `
+    <div class="card">
+      <h3>Как распределены деньги</h3>
+      <div class="spread">
+        ${list.map((p) => {
+          const pct = (val(p) / total) * 100;
+          return `<div class="spread-row${pct > max ? ' heavy' : ''}" data-symbol="${esc(p.symbol)}">
+            <span class="sym">${esc(p.symbol)}</span>
+            <span class="bar-track"><span class="bar-fill" style="width:${pct.toFixed(1)}%"></span><span class="bar-limit" style="left:${max}%"></span></span>
+            <span class="pct">${fmtNum(pct, 0, 0)} %</span>
+          </div>`;
+        }).join('')}
+      </div>
+      ${heavy.length
+        ? `<p class="note-warn small">Больше ${max}% денег лежит в ${heavy.map((p) => esc(p.symbol)).join(', ')}. Если эта компания упадёт, пострадает весь портфель. Следующие покупки лучше делать в другие компании.</p>`
+        : `<p class="small muted">Ни в одной компании нет больше ${max}% денег — хорошо.</p>`}
+      ${list.length < 5 ? `<p class="small muted">Сейчас у вас ${list.length} ${plural(list.length, 'компания', 'компании', 'компаний')}. Из десяти молодых компаний обычно выстреливают одна-две, поэтому хорошая цель — 8–15 разных ракет за пару лет.</p>` : ''}
+    </div>`;
+}
+
+export function renderPlan(el) {
+  const budget = data.settings.budget || 0;
+  const spent = spentByMonth(data.txs);
+  const thisMonth = ym(new Date());
+  const now = spent[thisMonth] || 0;
+  const pct = budget > 0 ? Math.min(100, (now / budget) * 100) : 0;
+  const left = budget - now;
+  const s = streak(spent);
+  const totalMonths = Object.keys(spent).length;
+  const report = nextReport();
+
+  el.innerHTML = `
+    <div class="section-head">
+      <div>
+        <h2>План</h2>
+        <p class="muted small">Понемногу, каждый месяц, в разные компании — и не трогать пару лет.</p>
+      </div>
+    </div>
+    <div class="plan-grid">
+      <div class="card budget-card">
+        <div class="muted small">${monthName(thisMonth)[0].toUpperCase() + monthName(thisMonth).slice(1)}</div>
+        <div class="budget-line-text"><span class="sum-value">${fmtIls(now)}</span> <span class="muted">из ${fmtIls(budget)}</span></div>
+        <div class="progress${now > budget && budget > 0 ? ' over' : ''}"><span style="width:${pct.toFixed(1)}%"></span></div>
+        <p class="small">${budget <= 0 ? 'Бюджет не задан — укажите его в настройках.'
+          : left > 0.005 ? `Можно вложить ещё <b>${fmtIls(left)}</b> в этом месяце.`
+          : left < -0.005 ? `Бюджет превышен на <b>${fmtIls(-left)}</b>. Ничего страшного, если это осознанно.`
+          : 'Бюджет месяца выполнен.'}</p>
+        <div class="btn-row">
+          <button type="button" class="btn primary" data-go="buy">${icon('plus')} Записать покупку</button>
+          <button type="button" class="btn" data-go="settings">Изменить бюджет</button>
+        </div>
+      </div>
+      <div class="card habit-card">
+        <div class="muted small">Привычка</div>
+        <div class="sum-value">${s} ${plural(s, 'месяц', 'месяца', 'месяцев')}</div>
+        <p class="small muted">${s ? 'подряд с покупками' : 'Подряд с покупками — пока ноль. Первая покупка запустит счётчик.'}${totalMonths > s ? ` Всего месяцев с покупками: ${totalMonths}.` : ''}</p>
+        <div class="muted small" style="margin-top:12px">Следующий отчёт о молодых компаниях</div>
+        <div><b>${fmtDate(report, { weekday: 'long', day: 'numeric', month: 'long' })}</b></div>
+        <p class="small muted">Понравившиеся компании добавляйте в «Наблюдаю».</p>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Вложения по месяцам</h3>
+      ${monthBars(spent, budget)}
+    </div>
+    ${spread()}
+    <div class="card rules">
+      <div class="rules-head">
+        <h3>Мои правила</h3>
+        <button type="button" class="btn ghost small-btn" data-go="rules">${editingRules ? 'Готово' : icon('edit', 16) + ' Изменить'}</button>
+      </div>
+      ${editingRules
+        ? `<textarea id="rules-text" rows="7">${esc(data.rules.join('\n'))}</textarea><p class="small muted">Одно правило — одна строка.</p>`
+        : `<ol>${data.rules.map((r) => `<li>${esc(r)}</li>`).join('')}</ol>`}
+    </div>`;
+}
+
+export function setupPlan(el) {
+  el.addEventListener('click', (e) => {
+    const go = e.target.closest('[data-go]');
+    if (go) {
+      const what = go.dataset.go;
+      if (what === 'buy') actions.openTx({ type: 'buy' });
+      else if (what === 'settings') document.getElementById('settings-btn').click();
+      else if (what === 'rules') {
+        if (editingRules) {
+          const text = el.querySelector('#rules-text').value;
+          data.rules = text.split('\n').map((r) => r.trim()).filter(Boolean);
+          save();
+        }
+        editingRules = !editingRules;
+        renderPlan(el);
+        if (editingRules) el.querySelector('#rules-text').focus();
+      }
+      return;
+    }
+    const row = e.target.closest('[data-symbol]');
+    if (row) actions.openDetail(row.dataset.symbol);
+  });
+}
+
+export const planIsEditing = () => editingRules;
