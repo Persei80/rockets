@@ -4,7 +4,7 @@
 import { data, prefs, savePrefs } from './store.js';
 import { live } from './live.js';
 import { fetchBars, fxSeries } from './api.js';
-import { positions, valuePositions, totals, rocketPos, rocketStage, capClass, portfolioHistory, historyApi, sortedTxs } from './calc.js';
+import { positions, valuePositions, totals, rocketPos, rocketStage, capClass, portfolioHistory, historyApi, sortedTxs, netIfSold } from './calc.js';
 import { createChart } from './chart.js';
 import { fmtMine, fmtPct, fmtMult, fmtShares, fmtUsd, fmtYears, fmtDate, fmtIlsShort, dirOf, esc, parseIso, privacy } from './format.js';
 import { t, tp } from './i18n.js';
@@ -246,6 +246,7 @@ export function renderPortfolio(el, { force = false } = {}) {
       <div class="gain" data-dir="${dirOf(tt.result)}">
         ${known ? `${privacy.on ? '' : fmtMine(tt.result, { signed: true }) + ' '}(${fmtPct(tt.resultPct)}) ${t('pf.allTime')}` : ''}
       </div>
+      ${known && tt.value > 0 && !privacy.on ? `<div class="small muted if-sold-sum" title="${esc(t('pf.ifSoldTip'))}">${t('pf.ifSold', { v: fmtMine(netIfSold(tt.value, tt.cost).net) })}</div>` : ''}
     </div>
     <dl class="sum-stats">
       <div><dt class="muted">${t('pf.investedTotal')}</dt><dd>${fmtMine(tt.invested)}</dd></div>

@@ -4,7 +4,7 @@
 import { data, save, prefs, savePrefs } from './store.js';
 import { live, trackSymbol } from './live.js';
 import { fetchBars, barIso, lastPrice } from './api.js';
-import { positions, valuePositions, capClass, riskLabel, rocketStage } from './calc.js';
+import { positions, valuePositions, capClass, riskLabel, rocketStage, netIfSold } from './calc.js';
 import { createChart } from './chart.js';
 import { fmtUsd, fmtMine, fmtPct, fmtMult, fmtShares, fmtCap, fmtDate, fmtNum, dirOf, esc, dateFmt, privacy } from './format.js';
 import { t } from './i18n.js';
@@ -21,7 +21,8 @@ const RANGES = [
   { key: '1M', api: '1M', months: 1 },
   { key: '6M', api: '6M', months: 6 },
   { key: 'YTD', api: '1Y', ytd: true },
-  { key: '1Y', api: '1Y', months: 12 },
+  // A year back the day and month repeat, so the axis shows month and year.
+  { key: '1Y', api: '1Y', months: 12, axis: { month: 'short', year: '2-digit' } },
   { key: '5Y', api: '5Y', months: 60, axis: { year: 'numeric' }, tip: { day: 'numeric', month: 'short', year: 'numeric' } },
   { key: 'MAX', api: 'ALL', axis: { year: 'numeric' }, tip: { month: 'short', year: 'numeric' } },
 ];
@@ -216,7 +217,7 @@ function drawChart() {
     tip: (i) => [fmtUsd(bars[i].p), clean(tipFmt.format(barDate(bars[i].d)))],
   });
   $('#d-legend').hidden = !markers.length && !(pos && pos.avgUsd);
-  $('#d-legend').querySelectorAll('span').forEach((s, k) => {
+  $('#d-legend').querySelectorAll(':scope > span').forEach((s, k) => {
     s.hidden = k === 0 ? !markers.some((m) => m.kind === 'buy') : k === 1 ? !markers.some((m) => m.kind === 'sell') : !(pos && pos.avgUsd);
   });
 }
@@ -295,6 +296,7 @@ function renderPosition(symbol) {
         <div><dt class="muted">${t('d.result')}</dt><dd data-dir="${dirOf(p.gainIls ?? 0)}">${p.gainIls == null ? '—' : privacy.on ? fmtPct(p.gainPct) : fmtMine(p.gainIls, { signed: true })}</dd></div>
         <div><dt class="muted">${t('d.mult')}</dt><dd><b>${fmtMult(p.mult)}</b></dd></div>
       </dl>
+      ${ifSold(p)}
       ${rocketMeter(p.mult)}
       <div class="meter-label small muted">${rocketStage(p.mult)}</div>` : `
       <p class="small">${t('d.closed', { a: fmtMine(p.investedIls), b: fmtMine(p.proceedsIls) })}
@@ -313,6 +315,13 @@ function renderPosition(symbol) {
         </li>`;
       }).join('')}
     </ul>`;
+}
+
+function ifSold(p) {
+  const n = netIfSold(p.valueIls, p.costIls);
+  if (!n) return '';
+  return `<div class="if-sold small">${t('d.ifSold', { v: fmtMine(n.net) })}
+    <span class="muted">${t('d.ifSoldHint', { t: fmtMine(n.tax), f: fmtMine(n.fxCost) })}</span></div>`;
 }
 
 function renderWatchInfo(w, q) {

@@ -88,6 +88,18 @@ export function totals(list) {
   return r;
 }
 
+// What selling now would leave in hand: the broker's dollar-to-shekel spread
+// (about 1.5% at Blink) and Israel's 25% capital gains tax on the profit only.
+export const FX_SPREAD = 0.015;
+export const GAINS_TAX = 0.25;
+export function netIfSold(valueIls, costIls) {
+  if (valueIls == null || !(valueIls > 0)) return null;
+  const fxCost = valueIls * FX_SPREAD;
+  const gain = valueIls - fxCost - costIls;
+  const tax = gain > 0 ? gain * GAINS_TAX : 0;
+  return { net: valueIls - fxCost - tax, tax, fxCost };
+}
+
 // Shekels spent on purchases per 'YYYY-MM'.
 export function spentByMonth(txs) {
   const out = {};

@@ -1,6 +1,6 @@
 // Network-first for the app's own files so updates show up right away;
 // the cache only serves them when offline. Market data requests are not touched.
-const CACHE = 'rockets-v3';
+const CACHE = 'rockets-v4';
 const SHELL = [
   './', 'index.html', 'style.css', 'manifest.webmanifest', 'icons/icon-192.png',
   'js/app.js', 'js/achievements.js', 'js/api.js', 'js/bus.js', 'js/calc.js', 'js/chart.js', 'js/detail.js', 'js/effects.js', 'js/format.js',
