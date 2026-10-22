@@ -426,6 +426,7 @@ export function setupWelcome({ onAppearance }) {
     savePrefs();
     onAppearance();
     dlg.querySelectorAll('[data-lang]').forEach((x) => x.setAttribute('aria-pressed', x === b));
+    b.focus();
   });
   $('#welcome-form').addEventListener('submit', (e) => {
     e.preventDefault();
@@ -444,4 +445,7 @@ export function showWelcome() {
   dlg.querySelectorAll('[data-lang]').forEach((x) => x.setAttribute('aria-pressed', x.dataset.lang === getLang()));
   $('#wl-budget').value = data.settings.budget;
   dlg.showModal();
+  // Otherwise the browser focuses the first language button, and with the
+  // other one selected both look highlighted.
+  dlg.querySelector('[data-lang][aria-pressed="true"]')?.focus();
 }
