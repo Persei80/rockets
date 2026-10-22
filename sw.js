@@ -1,10 +1,10 @@
 // Network-first for the app's own files so updates show up right away;
 // the cache only serves them when offline. Market data requests are not touched.
-const CACHE = 'rockets-v4';
+const CACHE = 'rockets-v5';
 const SHELL = [
   './', 'index.html', 'style.css', 'manifest.webmanifest', 'icons/icon-192.png',
   'js/app.js', 'js/achievements.js', 'js/api.js', 'js/bus.js', 'js/calc.js', 'js/chart.js', 'js/detail.js', 'js/effects.js', 'js/format.js',
-  'js/forms.js', 'js/i18n.js', 'js/live.js', 'js/machine.js', 'js/plan.js', 'js/portfolio.js', 'js/store.js', 'js/strings.js', 'js/ui.js', 'js/watch.js',
+  'js/forms.js', 'js/i18n.js', 'js/live.js', 'js/machine.js', 'js/opinions.js', 'js/plan.js', 'js/portfolio.js', 'js/store.js', 'js/strings.js', 'js/ui.js', 'js/watch.js',
 ];
 
 self.addEventListener('install', (e) => {

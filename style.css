@@ -800,3 +800,18 @@ main { max-width: 1200px; margin: 0 auto; padding: 22px 24px 56px; }
 .if-sold { background: var(--surface-2); border-radius: 10px; padding: 9px 12px; margin: 4px 0 2px; display: flex; flex-direction: column; gap: 2px; }
 .if-sold b { font-variant-numeric: tabular-nums; }
 .if-sold-sum { margin-top: 4px; }
+
+/* Claude's take */
+.opinion { border-radius: 10px; padding: 8px 12px; display: flex; flex-direction: column; gap: 3px; font-size: 14px; line-height: 1.45; background: var(--op-bg); border-inline-start: 3px solid var(--op); }
+.opinion.stale { opacity: .75; }
+.op-head { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 13px; }
+.op-head b { color: var(--op); }
+.op-text { white-space: pre-wrap; }
+.op-text.clamped { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.op-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--op); flex-shrink: 0; vertical-align: middle; }
+.op-ok { --op: var(--up); --op-bg: var(--up-bg); }
+.op-watch { --op: var(--warn); --op-bg: var(--warn-bg); }
+.op-broken { --op: var(--down); --op-bg: var(--down-bg); }
+.op-list { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.op-list li { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.pos .opinion { margin: 2px 0 8px; }

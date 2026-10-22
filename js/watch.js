@@ -9,6 +9,7 @@ import { t } from './i18n.js';
 import { icon, logo, toast } from './ui.js';
 import { capBadge } from './portfolio.js';
 import { actions } from './bus.js';
+import { opinionLine } from './opinions.js';
 
 const expanded = new Set();
 const SORTS = ['added', 'since', 'cap', 'today'];
@@ -44,6 +45,7 @@ function row(w, owned) {
         ${w.source ? `<span class="muted">${t('w.source')} ${esc(w.source)}</span>` : ''}
       </div>
       ${grown ? `<div class="note-warn small">${t('w.grown')}</div>` : ''}
+      ${opinionLine(w.symbol)}
       ${w.why ? `<div class="why ${long && !open ? 'clamped' : ''}" dir="auto">${esc(w.why)}</div>
         ${long ? `<button type="button" class="link-btn small" data-act="more">${open ? t('w.less') : t('w.more')}</button>` : ''}` : ''}
       <div class="cand-actions">
@@ -78,6 +80,7 @@ export function renderWatch(el) {
         ${list.length ? `<label class="sort small muted">${t('sort')}
           <select id="watch-sort">${SORTS.map((k) => `<option value="${k}"${(prefs.watchSort || 'added') === k ? ' selected' : ''}>${t('w.sort.' + k)}</option>`).join('')}</select>
         </label>` : ''}
+        ${list.length ? `<button type="button" class="btn" data-act="opinions">${icon('spark', 16)} ${t('op.btn')}</button>` : ''}
         <button type="button" class="btn primary" data-act="add">${icon('plus')} ${t('w.add')}</button>
       </div>
     </div>
@@ -109,6 +112,7 @@ export function setupWatch(el) {
     const card = e.target.closest('[data-symbol]');
     const symbol = card?.dataset.symbol;
     if (btn?.dataset.act === 'add') { actions.openWatch({}); return; }
+    if (btn?.dataset.act === 'opinions') { actions.openOpinions(); return; }
     if (!symbol) return;
     if (!btn) {
       if (e.target.closest('[data-open]')) actions.openDetail(symbol);

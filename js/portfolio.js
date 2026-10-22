@@ -11,6 +11,7 @@ import { t, tp } from './i18n.js';
 import { $, icon, logo } from './ui.js';
 import { countUp } from './effects.js';
 import { actions } from './bus.js';
+import { opinionLine, opinionDot } from './opinions.js';
 
 export const ROCKET = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 2.5c3.2 2.2 5 5.8 5 10.2l-2 2.8H9l-2-2.8c0-4.4 1.8-8 5-10.2z" fill="currentColor"/><circle cx="12" cy="9.5" r="1.8" fill="var(--surface)"/><path d="M9 15.5l-2.6 3.3L9 18.3zM15 15.5l2.6 3.3-2.6-.5z" fill="currentColor"/><path class="flame" d="M10.4 16.5h3.2L12 22z" fill="#f59e0b"/></svg>';
 
@@ -55,6 +56,7 @@ function card(p) {
       </div>
       ${rocketMeter(p.mult)}
       <div class="meter-label small"><b>${fmtMult(p.mult)}</b> <span class="muted">${rocketStage(p.mult)}</span></div>
+      ${opinionLine(p.symbol)}
       <dl class="mini small">
         <div><dt class="muted">${t('pf.invested')}</dt><dd>${fmtMine(p.costIls)}</dd></div>
         <div><dt class="muted">${t('pf.shares')}</dt><dd>${fmtShares(p.shares)}</dd></div>
@@ -67,7 +69,7 @@ function card(p) {
 function tableRow(p) {
   return `
     <tr data-symbol="${esc(p.symbol)}" tabindex="0">
-      <td><div class="t-co">${logo(p.symbol)}<div><b>${esc(p.symbol)}</b><div class="muted small">${esc(data.names[p.symbol] || '')}</div></div></div></td>
+      <td><div class="t-co">${logo(p.symbol)}<div><b>${esc(p.symbol)}</b> ${opinionDot(p.symbol)}<div class="muted small">${esc(data.names[p.symbol] || '')}</div></div></div></td>
       <td class="num">${fmtMine(p.valueIls)}</td>
       <td class="num">${fmtMine(p.costIls)}</td>
       <td class="num" data-dir="${dirOf(p.gainIls ?? 0)}">${privacy.on ? '' : fmtMine(p.gainIls, { signed: true }) + '<br>'}<small>${fmtPct(p.gainPct)}</small></td>
@@ -213,6 +215,7 @@ function skeleton(el) {
           <button type="button" data-pfview="cards" aria-pressed="${prefs.pfView !== 'table'}" title="${esc(t('pf.viewCards'))}">${icon('cards', 16)}</button>
           <button type="button" data-pfview="table" aria-pressed="${prefs.pfView === 'table'}" title="${esc(t('pf.viewTable'))}">${icon('table', 16)}</button>
         </div>
+        <button type="button" class="btn" data-go="opinions">${icon('spark', 16)} ${t('op.btn')}</button>
         <button type="button" class="btn primary" data-go="buy">${icon('plus')} ${t('pf.addBuy')}</button>
       </div>
     </div>
@@ -286,6 +289,7 @@ export function setupPortfolio(el) {
     const go = e.target.closest('[data-go]');
     if (go) {
       if (go.dataset.go === 'buy') actions.openTx({ type: 'buy' });
+      else if (go.dataset.go === 'opinions') actions.openOpinions();
       else if (go.dataset.go === 'watch') { actions.show('watch'); actions.openWatch({}); }
       else actions.show(go.dataset.go);
       return;

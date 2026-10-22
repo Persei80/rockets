@@ -282,6 +282,30 @@ const ru = {
   'd.more': 'Подробнее:',
   'd.news': 'новости',
 
+  'op.btn': 'Мнение Claude',
+  'op.title': 'Мнение Claude',
+  'op.intro': 'В конце ежемесячного отчёта Claude пишет блок <b>МНЕНИЕ CLAUDE</b>: по строчке на каждую компанию — почему цена так двигается и временно ли это. Скопируйте блок целиком и вставьте сюда, программа сама разложит его по компаниям. Это бесплатно: отчёт вы делаете на своей подписке.',
+  'op.pasteLabel': 'Блок из отчёта',
+  'op.ph': 'МНЕНИЕ CLAUDE 2026-11-10\nAMPX | временно | Упала вместе со всеми маленькими компаниями, а заказы растут.\nXNDU | под вопросом | …',
+  'op.found': { one: 'Нашёл мнение о {n} компании:', few: 'Нашёл мнения о {n} компаниях:', many: 'Нашёл мнения о {n} компаниях:', other: 'Нашёл мнения о {n} компаниях:' },
+  'op.none': 'Пока не вижу строк вида «AMPX | временно | причина».',
+  'op.date': 'от {d}',
+  'op.notInApp': 'этой компании нет в программе',
+  'op.save': 'Сохранить',
+  'op.saved': { one: 'Мнение Claude обновлено: {n} компания', few: 'Мнение Claude обновлено: {n} компании', many: 'Мнение Claude обновлено: {n} компаний', other: 'Мнение Claude обновлено: {n} компании' },
+  'op.v.ok': 'Временно',
+  'op.v.watch': 'Под вопросом',
+  'op.v.broken': 'Идея сломалась',
+  'op.vh.ok': 'Скорее всего, это временно: с самой компанией всё в порядке.',
+  'op.vh.watch': 'Есть тревожные новости. Держать, но не докупать, пока не прояснится.',
+  'op.vh.broken': 'Причина, по которой покупали, больше не верна. Стоит подумать о продаже.',
+  'op.by': 'Claude, {d}',
+  'op.old': 'Устарело — обновится после следующего отчёта.',
+  'op.empty': 'Пока нет. Появится после ежемесячного отчёта.',
+  'op.paste': 'Вставить',
+  'op.update': 'Обновить',
+  'op.note': 'Это мнение ИИ по открытым новостям, а не гарантия.',
+
   'tx.buy': 'Покупка',
   'tx.sell': 'Продажа',
   'tx.newBuy': 'Записать покупку',
@@ -375,6 +399,7 @@ const ru = {
       <li><b>Глаз</b> вверху скрывает суммы в шекелях — можно показать экран друзьям, а видны будут только проценты и множители.</li>
       <li><b>EN / RU</b> переключает язык.</li>
       <li><b>Ползунки</b> — настройки: бюджет, тема, резервная копия, таблица для Excel.</li>
+      <li><b>Мнение Claude</b> — короткая причина, почему акция растёт или падает, и вывод: «временно», «под вопросом» или «идея сломалась». Раз в месяц вставляется из отчёта.</li>
     </ul>
     <h3>Словарик</h3>
     <dl class="glossary">
@@ -681,6 +706,30 @@ const en = {
   'd.more': 'More:',
   'd.news': 'news',
 
+  'op.btn': 'Claude’s take',
+  'op.title': 'Claude’s take',
+  'op.intro': 'The monthly report ends with a <b>CLAUDE’S TAKE</b> block: one line per company on why the price is moving and whether it’s temporary. Copy the whole block and paste it here; the app files it under each company. It’s free: you run the report on your own subscription.',
+  'op.pasteLabel': 'Block from the report',
+  'op.ph': 'CLAUDE’S TAKE 2026-11-10\nAMPX | temporary | Fell with all small caps while orders keep growing.\nXNDU | watch | …',
+  'op.found': { one: 'Found a take on {n} company:', other: 'Found takes on {n} companies:' },
+  'op.none': 'No lines like “AMPX | temporary | reason” yet.',
+  'op.date': 'dated {d}',
+  'op.notInApp': 'not in the app',
+  'op.save': 'Save',
+  'op.saved': { one: 'Claude’s take updated for {n} company', other: 'Claude’s take updated for {n} companies' },
+  'op.v.ok': 'Temporary',
+  'op.v.watch': 'Watch closely',
+  'op.v.broken': 'Thesis broken',
+  'op.vh.ok': 'Most likely temporary: the company itself is fine.',
+  'op.vh.watch': 'Some worrying news. Hold, but don’t add more until it clears up.',
+  'op.vh.broken': 'The reason you bought no longer holds. Worth thinking about selling.',
+  'op.by': 'Claude, {d}',
+  'op.old': 'Out of date — the next report will refresh it.',
+  'op.empty': 'Nothing yet. It appears after the monthly report.',
+  'op.paste': 'Paste',
+  'op.update': 'Update',
+  'op.note': 'This is an AI opinion based on public news, not a guarantee.',
+
   'tx.buy': 'Buy',
   'tx.sell': 'Sell',
   'tx.newBuy': 'Record a purchase',
@@ -774,6 +823,7 @@ const en = {
       <li><b>The eye</b> at the top hides shekel amounts — show the screen to friends and they’ll see only percentages and multiples.</li>
       <li><b>EN / RU</b> switches the language.</li>
       <li><b>The sliders</b> open Settings: budget, appearance, backup, Excel table.</li>
+      <li><b>Claude’s take</b> is a short reason why a stock is rising or falling, with a verdict: temporary, watch closely, or thesis broken. Paste it from the report once a month.</li>
     </ul>
     <h3>Glossary</h3>
     <dl class="glossary">

@@ -13,6 +13,7 @@ import { renderPlan, setupPlan, planIsEditing } from './plan.js';
 import { setupDetail, openDetail, renderDetail, refreshDetail, paintRanges } from './detail.js';
 import { setupTx, openTx, setupWatchForm, openWatch, setupSettings, setupWelcome, showWelcome } from './forms.js';
 import { checkAchievements, onCelebrate } from './achievements.js';
+import { setupOpinions, openOpinions } from './opinions.js';
 import { confetti } from './effects.js';
 
 const VIEWS = {
@@ -105,7 +106,7 @@ function busy() {
   return a && viewEl(current)?.contains(a) && a.matches('input, textarea, select');
 }
 
-Object.assign(actions, { openDetail, openTx, openWatch, show, refresh });
+Object.assign(actions, { openDetail, openTx, openWatch, openOpinions, show, refresh });
 privacy.on = !!prefs.privacy;
 setLang(prefs.lang || detectLang());
 
@@ -136,6 +137,7 @@ window.addEventListener('hashchange', () => show(location.hash.slice(1)));
 setupDetail();
 setupTx();
 setupWatchForm();
+setupOpinions();
 setupSettings({ onAppearance: applyAppearance });
 setupWelcome({ onAppearance: applyAppearance });
 setupInstall();

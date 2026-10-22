@@ -22,6 +22,7 @@ function defaults() {
     watch: [],    // { symbol, added, addedPrice, why, risk, source }
     names: {},    // symbol -> company name
     notes: {},    // symbol -> "why I believe in it"
+    opinions: {}, // symbol -> { verdict: 'ok'|'watch'|'broken', text, date } from Claude's monthly report
     rules: null,  // null = the default rules in the current language
     achievements: {}, // id -> 'YYYY-MM-DD' unlocked
   };
@@ -91,6 +92,9 @@ function normalize(raw) {
     watch,
     names: raw.names && typeof raw.names === 'object' ? { ...raw.names } : {},
     notes: raw.notes && typeof raw.notes === 'object' ? { ...raw.notes } : {},
+    opinions: Object.fromEntries(Object.entries(raw.opinions && typeof raw.opinions === 'object' ? raw.opinions : {})
+      .filter(([, o]) => o && ['ok', 'watch', 'broken'].includes(o.verdict) && /^\d{4}-\d\d-\d\d$/.test(o.date))
+      .map(([s, o]) => [s.toUpperCase(), { verdict: o.verdict, text: String(o.text || ''), date: o.date }])),
     rules: Array.isArray(raw.rules) && JSON.stringify(raw.rules) !== JSON.stringify(OLD_DEFAULT_RULES)
       ? raw.rules.map(String).filter((r) => r.trim())
       : null,

@@ -98,6 +98,7 @@
         <button type="button" class="btn" data-act="watch"></button>
       </div>
       <section id="d-position" class="d-section" hidden></section>
+      <section id="d-opinion" class="d-section"></section>
       <section class="d-section">
         <h3 data-i18n="d.whyTitle"></h3>
         <textarea id="d-note" rows="3" dir="auto" data-i18n-ph="d.whyPh"></textarea>
@@ -219,6 +220,27 @@
         <span class="spacer"></span>
         <button type="button" class="btn" data-close data-i18n="cancel"></button>
         <button type="submit" class="btn primary" id="w-submit"></button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Claude's take, pasted from the monthly report -->
+  <dialog id="op-dialog" class="sheet narrow" aria-labelledby="op-title">
+    <form id="op-form" class="sheet-body" novalidate>
+      <div class="sheet-head">
+        <h2 id="op-title" data-i18n="op.title"></h2>
+        <button type="button" class="close-btn" data-close data-i18n-aria="close">&times;</button>
+      </div>
+      <p class="small" data-i18n-html="op.intro"></p>
+      <label class="field">
+        <span data-i18n="op.pasteLabel"></span>
+        <textarea id="op-text" rows="7" dir="auto" spellcheck="false" data-i18n-ph="op.ph"></textarea>
+      </label>
+      <div id="op-preview" class="small"></div>
+      <div class="sheet-actions">
+        <span class="spacer"></span>
+        <button type="button" class="btn" data-close data-i18n="cancel"></button>
+        <button type="submit" class="btn primary" id="op-submit" data-i18n="op.save" disabled></button>
       </div>
     </form>
   </dialog>

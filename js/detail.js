@@ -12,6 +12,7 @@ import { $, icon, logo } from './ui.js';
 import { capBadge, rocketMeter } from './portfolio.js';
 import { removeFromWatch } from './watch.js';
 import { actions } from './bus.js';
+import { opinionLine } from './opinions.js';
 
 // CNBC returns more history than the range name says, so each range is
 // trimmed: by trading sessions for intraday data, by calendar otherwise.
@@ -89,6 +90,9 @@ export function setupDetail() {
   $('#d-position').addEventListener('keydown', (e) => {
     const li = e.target.closest('[data-tx]');
     if (li && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); actions.openTx({ id: li.dataset.tx }); }
+  });
+  $('#d-opinion').addEventListener('click', (e) => {
+    if (e.target.closest('[data-act="opinions"]')) actions.openOpinions();
   });
   $('#d-watch-info').addEventListener('click', (e) => {
     if (e.target.closest('[data-act="edit-watch"]')) actions.openWatch({ symbol: st.symbol });
@@ -264,6 +268,7 @@ export function renderDetail() {
   $('[data-act="watch"]', dlg).innerHTML = `${icon('eye', 16)} ${watched ? t('d.unwatch') : t('d.watch')}`;
 
   renderPosition(symbol);
+  renderOpinion(symbol);
   renderWatchInfo(watched, q);
 
   const rows = [
@@ -322,6 +327,17 @@ function ifSold(p) {
   if (!n) return '';
   return `<div class="if-sold small">${t('d.ifSold', { v: fmtMine(n.net) })}
     <span class="muted">${t('d.ifSoldHint', { t: fmtMine(n.tax), f: fmtMine(n.fxCost) })}</span></div>`;
+}
+
+function renderOpinion(symbol) {
+  const has = !!data.opinions[symbol];
+  $('#d-opinion').innerHTML = `
+    <div class="rules-head">
+      <h3>${t('op.title')}</h3>
+      <button type="button" class="btn ghost small-btn" data-act="opinions">${icon('spark', 16)} ${t(has ? 'op.update' : 'op.paste')}</button>
+    </div>
+    ${has ? opinionLine(symbol, { full: true }) : `<p class="small muted">${t('op.empty')}</p>`}
+    <p class="small muted">${t('op.note')}</p>`;
 }
 
 function renderWatchInfo(w, q) {

@@ -4,6 +4,7 @@ export const actions = {
   openDetail: (symbol) => {},
   openTx: (opts) => {},
   openWatch: (opts) => {},
+  openOpinions: () => {},
   show: (view) => {},
   refresh: () => {},
 };
