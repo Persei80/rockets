@@ -7,6 +7,7 @@ import { fmtDate, esc, todayIso, parseIso } from './format.js';
 import { t, tp } from './i18n.js';
 import { $, toast } from './ui.js';
 import { actions } from './bus.js';
+import { reportLink } from './report.js';
 
 export const VERDICTS = ['ok', 'watch', 'broken'];
 const STALE_DAYS = 45;
@@ -96,6 +97,7 @@ export function setupOpinions() {
 
 export function openOpinions() {
   $('#op-text').value = '';
+  $('#op-latest').innerHTML = reportLink();
   preview();
   $('#op-dialog').showModal();
   $('#op-text').focus();

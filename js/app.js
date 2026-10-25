@@ -14,6 +14,7 @@ import { setupDetail, openDetail, renderDetail, refreshDetail, paintRanges } fro
 import { setupTx, openTx, setupWatchForm, openWatch, setupSettings, setupWelcome, showWelcome } from './forms.js';
 import { checkAchievements, onCelebrate } from './achievements.js';
 import { setupOpinions, openOpinions } from './opinions.js';
+import { setupReport, loadReport } from './report.js';
 import { confetti } from './effects.js';
 
 const VIEWS = {
@@ -138,6 +139,7 @@ setupDetail();
 setupTx();
 setupWatchForm();
 setupOpinions();
+setupReport();
 setupSettings({ onAppearance: applyAppearance });
 setupWelcome({ onAppearance: applyAppearance });
 setupInstall();
@@ -158,4 +160,5 @@ onLive(() => {
 applyAppearance();
 show(location.hash.slice(1) || prefs.tab);
 poll();
+loadReport();
 if (!prefs.welcomed && !data.txs.length && !data.watch.length) showWelcome();

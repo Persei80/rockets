@@ -231,6 +231,7 @@
         <h2 id="op-title" data-i18n="op.title"></h2>
         <button type="button" class="close-btn" data-close data-i18n-aria="close">&times;</button>
       </div>
+      <div id="op-latest"></div>
       <p class="small" data-i18n-html="op.intro"></p>
       <label class="field">
         <span data-i18n="op.pasteLabel"></span>
@@ -243,6 +244,21 @@
         <button type="submit" class="btn primary" id="op-submit" data-i18n="op.save" disabled></button>
       </div>
     </form>
+  </dialog>
+
+  <!-- The automatic report from the scheduled Claude run -->
+  <dialog id="report-dialog" class="sheet narrow" aria-labelledby="rp-title">
+    <div class="sheet-body">
+      <div class="sheet-head">
+        <h2 id="rp-title"></h2>
+        <button type="button" class="close-btn" data-close data-i18n-aria="close">&times;</button>
+      </div>
+      <div id="report-body" class="report-body"></div>
+      <div class="sheet-actions">
+        <span class="spacer"></span>
+        <button type="button" class="btn" data-close data-i18n="close"></button>
+      </div>
+    </div>
   </dialog>
 
   <!-- Settings -->

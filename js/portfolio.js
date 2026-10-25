@@ -12,6 +12,7 @@ import { $, icon, logo } from './ui.js';
 import { countUp } from './effects.js';
 import { actions } from './bus.js';
 import { opinionLine, opinionDot } from './opinions.js';
+import { reportBanner } from './report.js';
 
 export const ROCKET = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 2.5c3.2 2.2 5 5.8 5 10.2l-2 2.8H9l-2-2.8c0-4.4 1.8-8 5-10.2z" fill="currentColor"/><circle cx="12" cy="9.5" r="1.8" fill="var(--surface)"/><path d="M9 15.5l-2.6 3.3L9 18.3zM15 15.5l2.6 3.3-2.6-.5z" fill="currentColor"/><path class="flame" d="M10.4 16.5h3.2L12 22z" fill="#f59e0b"/></svg>';
 
@@ -187,6 +188,7 @@ function drawHistory() {
 
 function skeleton(el) {
   el.innerHTML = `
+    <div id="pf-report"></div>
     <div class="summary card" id="pf-summary"></div>
     <div class="card hist">
       <div class="hist-head">
@@ -229,7 +231,7 @@ let counted = false;
 
 export function renderPortfolio(el, { force = false } = {}) {
   if (!data.txs.length) {
-    el.innerHTML = emptyState();
+    el.innerHTML = reportBanner() + emptyState();
     delete el.dataset.built;
     return;
   }
@@ -242,6 +244,7 @@ export function renderPortfolio(el, { force = false } = {}) {
   const best = open.filter((p) => p.mult != null).sort((a, b) => b.mult - a.mult)[0];
   const known = !tt.missing && live.fx;
 
+  $('#pf-report', el).innerHTML = reportBanner();
   $('#pf-summary', el).innerHTML = `
     <div class="sum-main">
       <div class="muted small">${t('pf.worthNow')}</div>

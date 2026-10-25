@@ -10,6 +10,7 @@ import { icon, logo, toast } from './ui.js';
 import { capBadge } from './portfolio.js';
 import { actions } from './bus.js';
 import { opinionLine } from './opinions.js';
+import { reportBanner } from './report.js';
 
 const expanded = new Set();
 const SORTS = ['added', 'since', 'cap', 'today'];
@@ -70,7 +71,7 @@ function sorted() {
 export function renderWatch(el) {
   const owned = new Set(positions(data.txs).filter((p) => p.open).map((p) => p.symbol));
   const list = sorted();
-  el.innerHTML = `
+  el.innerHTML = `${reportBanner()}
     <div class="section-head">
       <div>
         <h2>${t('tab.watch')}</h2>
