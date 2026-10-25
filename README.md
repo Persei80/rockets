@@ -46,5 +46,8 @@ python3 -m http.server 8000
 | `js/forms.js` | Покупка/продажа, наблюдение, настройки, приветствие |
 | `js/achievements.js`, `js/effects.js` | Достижения, конфетти, анимация чисел |
 | `manifest.webmanifest`, `sw.js`, `icons/` | Установка как приложение |
+| `js/report.js`, `claude/` | Автоматический отчёт Claude: программа сама забирает `claude/report.json` |
+| `tools/` | Тесты и вспомогательные скрипты (не часть сайта) |
+| `CLAUDE.md` | Заметки для Claude о проекте |
 
 Это не финансовая рекомендация. Not financial advice.
