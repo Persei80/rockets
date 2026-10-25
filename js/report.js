@@ -93,11 +93,14 @@ export function setupReport() {
   });
 }
 
-const isNew = () => !!report.current && report.current.date > (prefs.reportSeen || '');
+// A report counts as seen per date and candidate list, so candidates added to
+// the same day's report announce themselves again.
+const seenKey = (r) => `${r.date} ${r.candidates.map((c) => c.symbol).join(',')}`;
+const isNew = () => !!report.current && seenKey(report.current) !== (prefs.reportSeen || '');
 
 function markSeen() {
   if (!report.current) return;
-  prefs.reportSeen = report.current.date;
+  prefs.reportSeen = seenKey(report.current);
   savePrefs();
   actions.refresh();
 }
@@ -166,7 +169,7 @@ export function openReport() {
   const dlg = $('#report-dialog');
   if (!dlg.open) dlg.showModal();
   $('.sheet-body', dlg).scrollTop = 0;
-  if (isNew()) { prefs.reportSeen = report.current.date; savePrefs(); }
+  if (isNew()) { prefs.reportSeen = seenKey(report.current); savePrefs(); }
 }
 
 async function addCandidate(symbol, btn) {
