@@ -43,11 +43,25 @@ simple words, like for someone who is new to investing.
      $126,000 in October 2025). Then: "⚠️ Биткоин упал до $…", your view on the
      chance of returning to $100,000, and whether to buy a bitcoin fund in Blink
      (for example IBIT) for 100–200 ₪.
+   - Put each new candidate into `watch` too (see 7), and take out of `watch`
+     and `claude/tracked.txt` any company whose idea is `broken` or which is
+     clearly no longer worth a place (say why in its last verdict).
 6. Weekly runs: `candidates` is `[]`, `creative` and `bitcoin` are `""`.
    `plan` is one sentence on what to do this week, for example «На этой неделе:
    ничего не покупать, ждём отчёт AMPX 6 ноября» or «На этой неделе можно
    докупить SLDP на 100 ₪». Still mention bitcoin in `bitcoin` if it is below
    $35,000.
+7. Every run writes `watch`: the owner's whole watchlist, which Claude keeps.
+   The app makes its «Наблюдаю» list match it: it adds what is new, replaces the
+   text of what is there and removes the companies Claude dropped (companies the
+   owner added by hand stay). So always write the full list — start from the
+   previous report's `watch`, never leave it out or empty by accident.
+   `claude/tracked.txt` holds the same tickers. Each entry: `symbol`, `name`,
+   `risk` (`high`, `vhigh` or `lottery`) and `why` (at most 450 characters):
+   what the company does, why it is interesting, the main risks and what decides
+   the next step. Rewrite `why` only when something important changed;
+   the week's news belongs in `opinions`. Every ticker in `watch` gets a verdict
+   in `opinions`. Dropped companies get a last `broken` verdict saying why.
 
 ## How to run it cheaply
 
@@ -88,6 +102,9 @@ Write `claude/report.json` (UTF-8, valid JSON, exactly these fields) and a copy 
   ],
   "creative": "",
   "bitcoin": "",
+  "watch": [
+    { "symbol": "AMPX", "name": "Amprius Technologies, Inc.", "risk": "high", "why": "Что делает. Чем интересна. Риски. Что решит дальше." }
+  ],
   "sources": [ { "title": "Short title", "url": "https://…" } ]
 }
 ```

@@ -372,6 +372,97 @@ async function run(viewport, tag, scheme, lang) {
   }
   check(await page.evaluate(() => JSON.parse(localStorage.getItem('rk.data')).opinions.NFLX?.verdict) === 'broken', 'a report rewritten the same day replaces its own verdict');
 
+  // ---- the watchlist Claude keeps ----
+  console.log(`[${tag}] watchlist kept by Claude`);
+  const byLang = (ru, en) => (lang === 'ru' ? ru : en);
+  const wl = () => page.evaluate(() => JSON.parse(localStorage.getItem('rk.data')).watch);
+  const entry = async (s) => (await wl()).find((w) => w.symbol === s);
+  const useReport = async (rep) => {
+    const body = JSON.stringify(rep);
+    await page.route('**/claude/report.json', (route) => route.fulfill({ contentType: 'application/json', body }));
+    await page.reload();
+    await page.waitForSelector('#tabs [data-view="watch"]');
+    await page.waitForTimeout(300);
+  };
+  const WHY = {
+    NVDA: byLang('Видеокарты для нейросетей (тест).', 'GPUs for neural networks (test).'),
+    SERV: byLang('Роботы-доставщики, теперь список ведёт Claude.', 'Delivery robots, now on Claude’s list.'),
+    AMZN: byLang('Облака и склады (тест).', 'Cloud and warehouses (test).'),
+  };
+  const before = await wl();
+  const rklbBefore = JSON.stringify(before.find((w) => w.symbol === 'RKLB'));
+  const servBefore = before.find((w) => w.symbol === 'SERV');
+  check(!!servBefore && !servBefore.by && servBefore.why === 'Test note SERV' && !!rklbBefore && !before.some((w) => w.symbol === 'NVDA'),
+    'before the sync: SERV and RKLB are hand-added, NVDA is not listed');
+
+  // (1) a new company and (2) taking over a hand-added one
+  await useReport({ ...REPORT[lang], opinions: [], watch: [
+    { symbol: 'NVDA', name: 'NVIDIA Corp', why: WHY.NVDA, risk: 'high' },
+    { symbol: 'SERV', name: 'Serve Robotics Inc', why: WHY.SERV, risk: 'lottery' },
+  ] });
+  await page.waitForFunction(() => {
+    const w = JSON.parse(localStorage.getItem('rk.data')).watch.find((x) => x.symbol === 'NVDA');
+    return w && w.addedPrice > 0;
+  }, null, { timeout: 5000 }).catch(() => {});
+  const nvda = await entry('NVDA');
+  check(nvda && nvda.by === 'claude' && nvda.why === WHY.NVDA && nvda.risk === 'high', 'a company from the report’s watchlist is added with Claude’s text (' + JSON.stringify(nvda) + ')');
+  check(nvda && nvda.addedPrice > 0 && nvda.added === new Date().toISOString().slice(0, 10) && !!nvda.source, 'it gets today’s date, a source and its price shortly after');
+  check((await wl())[0].symbol === 'NVDA', 'the new company goes to the front of the list');
+  const serv = await entry('SERV');
+  check(serv && serv.by === 'claude' && serv.why === WHY.SERV && serv.risk === 'lottery', 'a hand-added company is taken over: Claude’s text replaces the old one');
+  check(JSON.stringify(await entry('RKLB')) === rklbBefore, 'a hand-added company that is not listed stays untouched');
+  check((await wl()).filter((w) => w.symbol === 'SERV').length === 1, 'the taken-over company is not duplicated');
+
+  // (5) the card
+  await page.click('#tabs [data-view="watch"]');
+  await page.waitForSelector('#view-watch .cand[data-symbol="NVDA"]');
+  for (const s of ['NVDA', 'SERV']) {
+    const card = page.locator(`#view-watch .cand[data-symbol="${s}"]`);
+    check((await card.textContent()).includes(byLang('Список ведёт Claude', 'Kept by Claude')), `${s}: the card says the list is kept by Claude`);
+    check(await card.locator('[data-act="edit"], [data-act="remove"]').count() === 0, `${s}: no edit and remove buttons on Claude’s card`);
+    check(await card.locator('[data-act="buy"]').count() === 1 && await card.locator('[data-act="chart"]').count() === 1, `${s}: buy and chart buttons stay`);
+  }
+  const hand = page.locator('#view-watch .cand[data-symbol="RKLB"]');
+  check(await hand.locator('[data-act="edit"]').count() === 1 && await hand.locator('[data-act="remove"]').count() === 1, 'a hand-added card keeps its edit and remove buttons');
+  check(!(await hand.textContent()).includes(byLang('Список ведёт Claude', 'Kept by Claude')), 'a hand-added card does not claim to be kept by Claude');
+  await shot(page, `${tag}-watch-claude`);
+  await checkText(page, lang, 'watchlist kept by Claude');
+  // the company window
+  await page.click('#view-watch .cand[data-symbol="NVDA"] [data-open]');
+  await page.waitForSelector('#detail[open]');
+  await page.waitForSelector('#detail [data-act="watch"]', { state: 'attached' });
+  check(await page.locator('#detail [data-act="watch"]').isHidden(), 'company window: the watch button is hidden for Claude’s entry');
+  check((await page.locator('#detail').textContent()).includes(byLang('Список ведёт Claude', 'Kept by Claude')) && await page.locator('#detail [data-act="edit-watch"]').count() === 0, 'company window: says Claude keeps it, no edit button');
+  await page.keyboard.press('Escape');
+  await closed(page, '#detail');
+  await page.click('#view-watch .cand[data-symbol="RKLB"] [data-open]');
+  await page.waitForSelector('#detail[open]');
+  check(await page.locator('#detail [data-act="watch"]').isVisible() && await page.locator('#detail [data-act="edit-watch"]').count() === 1, 'company window: a hand-added entry keeps the watch and edit buttons');
+  await page.keyboard.press('Escape');
+  await closed(page, '#detail');
+
+  // (3) the next report drops Claude's entries; a new one comes
+  await useReport({ ...REPORT[lang], opinions: [], watch: [{ symbol: 'AMZN', name: 'Amazon.com Inc', why: WHY.AMZN, risk: '' }] });
+  await page.waitForFunction(() => JSON.parse(localStorage.getItem('rk.data')).watch.some((w) => w.symbol === 'AMZN'), null, { timeout: 5000 }).catch(() => {});
+  const syms = (await wl()).map((w) => w.symbol);
+  check(!syms.includes('NVDA') && !syms.includes('SERV'), 'Claude’s entries that left the report are removed');
+  check(syms.includes('AMZN') && (await entry('AMZN'))?.by === 'claude', 'the new entry of that report is added');
+  check(JSON.stringify(await entry('RKLB')) === rklbBefore && syms.includes('IONQ') && syms.includes('KULR') && syms.includes('NNE') && syms.includes('TSLA'), 'hand-added entries that were never listed survive');
+  check(!(await entry('AMZN')).risk, 'an entry without a risk gets none');
+
+  // (4) a report without a watch field leaves the list alone
+  const listed = JSON.stringify(await wl());
+  await useReport({ ...REPORT[lang], opinions: [] });
+  await page.waitForTimeout(700);
+  check(JSON.stringify(await wl()) === listed, 'a report with no watch field does not touch the watchlist');
+  await useReport({ ...REPORT[lang], opinions: [], watch: [] });
+  await page.waitForTimeout(700);
+  const emptied = (await wl()).map((w) => w.symbol);
+  check(!emptied.includes('AMZN') && emptied.includes('RKLB') && emptied.length === syms.length - 1, 'an empty watch list drops only Claude’s entries');
+  await page.click('#tabs [data-view="watch"]');
+  await page.waitForSelector('#view-watch .cand[data-symbol="RKLB"]');
+  check(await page.locator('#view-watch .cand[data-symbol="AMZN"]').count() === 0, 'the removed company is gone from the screen');
+
   // ---- import backup into a fresh context ----
   const ctx2 = await browser.newContext({ viewport, colorScheme: scheme, locale: lang === 'ru' ? 'ru-RU' : 'en-US' });
   const p2 = await ctx2.newPage();

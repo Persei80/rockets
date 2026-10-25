@@ -19,7 +19,7 @@ function defaults() {
     version: 1,
     settings: { budget: 150, maxShare: 30, fee: 0 },
     txs: [],      // { id, symbol, type: 'buy'|'sell', date, shares, price, fx, fee, note, created }
-    watch: [],    // { symbol, added, addedPrice, why, risk, source }
+    watch: [],    // { symbol, added, addedPrice, why, risk, source, by: 'claude' when the report manages it }
     names: {},    // symbol -> company name
     notes: {},    // symbol -> "why I believe in it"
     opinions: {}, // symbol -> { verdict: 'ok'|'watch'|'broken', text, date } from Claude's monthly report
@@ -84,6 +84,7 @@ function normalize(raw) {
       why: String(w.why || ''),
       risk: ['high', 'vhigh', 'lottery'].includes(w.risk) ? w.risk : '',
       source: String(w.source || ''),
+      by: w.by === 'claude' ? 'claude' : '',
     }));
   return {
     version: 1,

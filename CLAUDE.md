@@ -26,7 +26,9 @@ Do not touch the `persei80/stock-watch` repository: it belongs to a friend's fri
 - `REPORT.md` — prompt the owner pastes into Claude on the 10th (payday).
 - `claude/ROUTINE.md` — the automatic check: research `claude/tracked.txt`, write
   `claude/report.json`; the app loads it on start (`js/report.js`), files verdicts
-  under each company (`js/opinions.js`) and offers new candidates.
+  under each company (`js/opinions.js`), offers new candidates and makes the
+  watchlist match the report's `watch` list (entries marked `by: 'claude'`; the
+  owner only records purchases himself — his holdings stay private to his browser).
 - Running it in Claude's cloud costs the owner's cloud credit, so the two cloud
   routines stay paused. Instead it runs on the owner's Mac as desktop-app scheduled
   tasks (Max subscription, free): `rockets-weekly-check` (Monday 08:00) and

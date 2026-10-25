@@ -104,6 +104,7 @@ const ru = {
   'hist.ALL': 'Всё',
 
   'w.owned': 'в портфеле',
+  'w.byClaude': 'Список ведёт Claude',
   'w.todayChange': '{p} сегодня',
   'w.since': 'С {d}:',
   'w.sinceAdded': 'С добавления:',
@@ -546,6 +547,7 @@ const en = {
   'hist.ALL': 'All',
 
   'w.owned': 'owned',
+  'w.byClaude': 'Kept by Claude',
   'w.todayChange': '{p} today',
   'w.since': 'Since {d}:',
   'w.sinceAdded': 'Since added:',

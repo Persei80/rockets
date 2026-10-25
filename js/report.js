@@ -45,6 +45,18 @@ function clean(raw) {
         creative: !!c?.creative,
       }))
       .filter((c) => SYMBOL.test(c.symbol)),
+    // The full watchlist Claude keeps; null when the report doesn't carry one.
+    watch: Array.isArray(raw.watch)
+      ? raw.watch
+        .map((w) => ({
+          symbol: sym(w?.symbol),
+          name: str(w?.name, 120),
+          why: str(w?.why),
+          risk: ['high', 'vhigh', 'lottery'].includes(w?.risk) ? w.risk : '',
+        }))
+        .filter((w) => SYMBOL.test(w.symbol))
+        .slice(0, 40)
+      : null,
     sources: list(raw.sources)
       .map((s) => ({ title: str(s?.title, 120), url: str(s?.url, 500) }))
       .filter((s) => /^https:\/\//.test(s.url))
@@ -76,8 +88,52 @@ export async function loadReport() {
     changed = true;
   }
   for (const c of r.candidates) if (c.name && !data.names[c.symbol]) data.names[c.symbol] = c.name;
+  if (r.watch && syncWatch(r)) changed = true;
   if (changed) save();
   actions.refresh();
+}
+
+// The report's watchlist is the list Claude keeps: its companies are added (or
+// taken over if already there) with Claude's text, and the ones Claude dropped
+// go away. Companies added by hand and never in the list stay untouched.
+function syncWatch(r) {
+  const keep = new Map(r.watch.map((w) => [w.symbol, w]));
+  const source = t('rp.source', { d: fmtDate(r.date) });
+  const before = data.watch.length;
+  data.watch = data.watch.filter((w) => w.by !== 'claude' || keep.has(w.symbol));
+  let changed = data.watch.length !== before;
+  const fresh = [];
+  for (const c of r.watch) {
+    if (c.name && !data.names[c.symbol]) data.names[c.symbol] = c.name;
+    const w = data.watch.find((x) => x.symbol === c.symbol);
+    const why = c.why || w?.why || '';
+    if (!w) fresh.push({ symbol: c.symbol, added: todayIso(), addedPrice: null, why, risk: c.risk, source, by: 'claude' });
+    else if (w.by !== 'claude' || w.why !== why || w.risk !== c.risk) {
+      Object.assign(w, { why, risk: c.risk, source, by: 'claude' });
+      changed = true;
+    }
+  }
+  if (fresh.length) {
+    data.watch.unshift(...fresh);
+    changed = true;
+    fillPrices(fresh.map((w) => w.symbol));
+  }
+  return changed;
+}
+
+// Price on the day Claude added a company, for "since added".
+async function fillPrices(symbols) {
+  const need = symbols.filter((s) => !live.quotes[s]);
+  if (need.length) {
+    try { Object.assign(live.quotes, await fetchQuotes(need)); } catch { /* filled on a later start */ }
+  }
+  for (const s of symbols) {
+    const w = data.watch.find((x) => x.symbol === s);
+    if (w && w.addedPrice == null) w.addedPrice = lastPrice(live.quotes[s]);
+  }
+  save();
+  actions.refresh();
+  poll();
 }
 
 export function setupReport() {

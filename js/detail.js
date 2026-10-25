@@ -266,6 +266,7 @@ export function renderDetail() {
     q && !q.realTime ? `<span class="badge">${t('d.delayed')}</span>` : '',
   ].join(' ');
   $('[data-act="watch"]', dlg).innerHTML = `${icon('eye', 16)} ${watched ? t('d.unwatch') : t('d.watch')}`;
+  $('[data-act="watch"]', dlg).hidden = watched?.by === 'claude';
 
   renderPosition(symbol);
   renderOpinion(symbol);
@@ -349,7 +350,7 @@ function renderWatchInfo(w, q) {
   el.innerHTML = `
     <div class="rules-head">
       <h3>${t('d.watching')}</h3>
-      <button type="button" class="btn ghost small-btn" data-act="edit-watch">${icon('edit', 16)} ${t('edit')}</button>
+      ${w.by === 'claude' ? `<span class="small muted">${t('w.byClaude')}</span>` : `<button type="button" class="btn ghost small-btn" data-act="edit-watch">${icon('edit', 16)} ${t('edit')}</button>`}
     </div>
     <p class="small">${w.added ? t('w.since', { d: fmtDate(w.added) }) : t('w.sinceAdded')}${w.addedPrice ? ' ' + t('d.wasPrice', { p: fmtUsd(w.addedPrice) }) : ''}
       <b data-dir="${dirOf(since ?? 0)}">${fmtPct(since)}</b>${w.source ? ` · <span class="muted">${esc(w.source)}</span>` : ''}</p>

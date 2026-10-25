@@ -52,8 +52,9 @@ function row(w, owned) {
       <div class="cand-actions">
         <button type="button" class="btn primary" data-act="buy">${icon('cart', 16)} ${t('w.bought')}</button>
         <button type="button" class="btn" data-act="chart">${icon('chart', 16)} ${t('w.chart')}</button>
+        ${w.by === 'claude' ? `<span class="small muted">${t('w.byClaude')}</span>` : `
         <button type="button" class="btn ghost" data-act="edit" title="${esc(t('edit'))}" aria-label="${esc(t('edit'))}">${icon('edit', 16)}</button>
-        <button type="button" class="btn ghost" data-act="remove" title="${esc(t('w.remove'))}" aria-label="${esc(t('w.remove'))}">${icon('trash', 16)}</button>
+        <button type="button" class="btn ghost" data-act="remove" title="${esc(t('w.remove'))}" aria-label="${esc(t('w.remove'))}">${icon('trash', 16)}</button>`}
       </div>
     </article>`;
 }
