@@ -2,7 +2,7 @@
   "date": "2026-10-25",
   "kind": "weekly",
   "summary": "На этой неделе маленькие компании в среднем подросли примерно на 2% (индекс Russell 2000), но за месяц всё ещё немного в минусе. Ваши четыре упали сильнее рынка — все сейчас около минимума за год. В среду, 28 октября, ФРС решает про ставку, а с 3 по 10 ноября у всех четырёх отчёты, поэтому цены могут сильно прыгать.",
-  "plan": "На этой неделе ничего не покупать: у всех четырёх компаний отчёты с 3 по 10 ноября. Деньги никуда не денутся — 10 ноября, в день зарплаты, решим, что докупить, уже зная результаты.",
+  "plan": "На этой неделе ничего не покупать: у всех четырёх ваших компаний и у трёх новых кандидатов отчёты с 3 по 10 ноября. Новых кандидатов добавьте в «Наблюдаю» кнопкой ниже. 10 ноября, в день зарплаты, по результатам отчётов решим, что докупить и брать ли одну новую — сейчас первая в очереди Carlsmed (CARL).",
   "opinions": [
     {
       "symbol": "AMPX",
@@ -25,19 +25,90 @@
       "text": "Акция упала почти вдвое за месяц, до $2,64, и всё ещё ищет дно. Причина — продажи акций: в сентябре основатели и первые инвесторы получили право продавать, а сама компания может выпускать новые акции. Хорошие новости (договор с GlobalFoundries, до $10 млн от DARPA) не помогли. Денег много, около $313 млн. Отчёт примерно 4 ноября. Совет: подождать, пока цена не перестанет падать."
     }
   ],
-  "candidates": [],
-  "creative": "",
+  "candidates": [
+    {
+      "symbol": "CARL",
+      "name": "Carlsmed, Inc.",
+      "risk": "vhigh",
+      "amount": 100,
+      "creative": false,
+      "why": "Печатает на 3D-принтере импланты для позвоночника, сделанные точно под конкретного человека. Почему она: это новый вид операций, выручка растёт примерно на 57% в год, а с 1 октября 2026 государственная страховка Medicare стала лучше платить за такие операции. Что может пойти не так: компания пока в убытке, хирурги могут привыкать медленно. Цена $14,53, компания стоит около $400 млн, денег хватит примерно на 2 года. Когда покупать: после отчёта примерно 5 ноября."
+    },
+    {
+      "symbol": "SATL",
+      "name": "Satellogic Inc.",
+      "risk": "high",
+      "amount": 100,
+      "creative": false,
+      "why": "Делает дешёвые спутники, которые фотографируют Землю, и продаёт снимки и сами спутники — в основном военным и правительствам. Почему она: выручка за год выросла в 3,5 раза, заказов уже на $80 млн, и компания впервые вышла в плюс по операционной прибыли (EBITDA). Что может пойти не так: заказов от немногих клиентов, отчёты скачут, возможен выпуск новых акций. Цена $3,83 (−30% за месяц), компания стоит около $590 млн, денег примерно на 2 года. Когда покупать: после отчёта примерно 9 ноября."
+    },
+    {
+      "symbol": "IMSR",
+      "name": "Terrestrial Energy Inc.",
+      "risk": "vhigh",
+      "amount": 100,
+      "creative": false,
+      "why": "Разрабатывает маленькие атомные реакторы нового типа (на расплавленной соли), например для питания дата-центров с ИИ. Почему она: компания стоит почти столько же, сколько у неё денег на счёте (около $283 млн, долгов нет), то есть за саму идею сейчас почти не платят. Регулятор США уже одобрил часть документов. Что может пойти не так: выручки не будет до начала 2030-х, акция упала на 37% за месяц и может падать дальше. Цена $2,80. Когда покупать: частями, после отчёта примерно 10 ноября."
+    }
+  ],
+  "creative": "Творческие: в этом месяце сильной нет. Ближе всех Angel Studios (ANGX, кино, которое оплачивают зрители), но денег у неё мало при долгах, и это скорее новая модель бизнеса, чем новая технология. Остальные игровые и киностудии либо слишком маленькие (меньше $50 млн), либо на бирже давно, либо не растут.",
   "bitcoin": "",
   "sources": [
-    { "title": "Amprius: результаты 2 квартала 2026 (SEC)", "url": "https://www.sec.gov/Archives/edgar/data/0001899287/000189928726000056/ampx-2026x08x04x8kex991.htm" },
-    { "title": "AMPX у минимума за год (MarketBeat, 21.10)", "url": "https://www.marketbeat.com/instant-alerts/price-amprius-technologies-nyse-ampx-hits-new-12-month-low-should-you-sell-2026-10-21/" },
-    { "title": "Solid Power: результаты 2 квартала 2026 (SEC)", "url": "https://www.sec.gov/Archives/edgar/data/0001844862/000110465926090369/tm2622211d1_ex99-1.htm" },
-    { "title": "SLDP: цены и дата отчёта (Stock Analysis)", "url": "https://stockanalysis.com/stocks/sldp/" },
-    { "title": "Red Cat покупает Steyr Motors (19.10)", "url": "https://www.stocktitan.net/news/RCAT/red-cat-announces-proposed-voluntary-public-purchase-offer-for-steyr-2ojkj7jepk7n.html" },
-    { "title": "Red Cat: результаты 2 квартала 2026 (SEC)", "url": "https://www.sec.gov/Archives/edgar/data/0000748268/000162828026054364/rcat-20260806xexx991a.htm" },
-    { "title": "Xanadu: отчёт за 2 квартал 2026 (SEC)", "url": "https://www.sec.gov/Archives/edgar/data/0002097163/000209716326000020/xndu-20260630_d2.htm" },
-    { "title": "Xanadu получает до $10 млн от DARPA (20.10)", "url": "https://thequantuminsider.com/2026/10/20/darpa-10-million-xanadu-quantum-research/" },
-    { "title": "Xanadu и GlobalFoundries (06.10)", "url": "https://www.bnnbloomberg.ca/press-releases/2026/10/06/xanadu-and-globalfoundries-announce-strategic-partnership-to-accelerate-utility-scale-quantum-manufacturing/" },
-    { "title": "Индексы США в пятницу 23.10", "url": "https://www.lanacion.com.ar/usa/how-major-us-stock-indexes-fared-friday-10232026-nid23102026/" }
+    {
+      "title": "Amprius: результаты 2 квартала 2026 (SEC)",
+      "url": "https://www.sec.gov/Archives/edgar/data/0001899287/000189928726000056/ampx-2026x08x04x8kex991.htm"
+    },
+    {
+      "title": "AMPX у минимума за год (MarketBeat, 21.10)",
+      "url": "https://www.marketbeat.com/instant-alerts/price-amprius-technologies-nyse-ampx-hits-new-12-month-low-should-you-sell-2026-10-21/"
+    },
+    {
+      "title": "Solid Power: результаты 2 квартала 2026 (SEC)",
+      "url": "https://www.sec.gov/Archives/edgar/data/0001844862/000110465926090369/tm2622211d1_ex99-1.htm"
+    },
+    {
+      "title": "SLDP: цены и дата отчёта (Stock Analysis)",
+      "url": "https://stockanalysis.com/stocks/sldp/"
+    },
+    {
+      "title": "Red Cat покупает Steyr Motors (19.10)",
+      "url": "https://www.stocktitan.net/news/RCAT/red-cat-announces-proposed-voluntary-public-purchase-offer-for-steyr-2ojkj7jepk7n.html"
+    },
+    {
+      "title": "Red Cat: результаты 2 квартала 2026 (SEC)",
+      "url": "https://www.sec.gov/Archives/edgar/data/0000748268/000162828026054364/rcat-20260806xexx991a.htm"
+    },
+    {
+      "title": "Xanadu: отчёт за 2 квартал 2026 (SEC)",
+      "url": "https://www.sec.gov/Archives/edgar/data/0002097163/000209716326000020/xndu-20260630_d2.htm"
+    },
+    {
+      "title": "Xanadu получает до $10 млн от DARPA (20.10)",
+      "url": "https://thequantuminsider.com/2026/10/20/darpa-10-million-xanadu-quantum-research/"
+    },
+    {
+      "title": "Xanadu и GlobalFoundries (06.10)",
+      "url": "https://www.bnnbloomberg.ca/press-releases/2026/10/06/xanadu-and-globalfoundries-announce-strategic-partnership-to-accelerate-utility-scale-quantum-manufacturing/"
+    },
+    {
+      "title": "Индексы США в пятницу 23.10",
+      "url": "https://www.lanacion.com.ar/usa/how-major-us-stock-indexes-fared-friday-10232026-nid23102026/"
+    },
+    {
+      "title": "Carlsmed: результаты 2 квартала 2026",
+      "url": "https://finviz.com/news/377812/carlsmed-reports-second-quarter-2026-financial-results-and-raises-full-year-guidance"
+    },
+    {
+      "title": "Satellogic: результаты 2 квартала 2026",
+      "url": "https://finviz.com/news/377870/satellogic-reports-second-quarter-2026-financial-results"
+    },
+    {
+      "title": "Terrestrial Energy: результаты 2 квартала 2026",
+      "url": "https://stocktitan.net/news/IMSR/terrestrial-energy-reports-second-quarter-2026-9telhpijuux3.html"
+    },
+    {
+      "title": "Angel Studios: отчёт 10-Q за 2 квартал (SEC)",
+      "url": "https://www.sec.gov/Archives/edgar/data/0001865200/000186520026000070/angx-20260630x10q.htm"
+    }
   ]
 }
