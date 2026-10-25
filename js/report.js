@@ -116,8 +116,10 @@ function syncWatch(r) {
   if (fresh.length) {
     data.watch.unshift(...fresh);
     changed = true;
-    fillPrices(fresh.map((w) => w.symbol));
   }
+  // Also retries the ones whose price couldn't be fetched earlier the same day.
+  const unpriced = data.watch.filter((w) => w.by === 'claude' && w.addedPrice == null && w.added === todayIso());
+  if (unpriced.length) fillPrices(unpriced.map((w) => w.symbol));
   return changed;
 }
 
@@ -127,10 +129,13 @@ async function fillPrices(symbols) {
   if (need.length) {
     try { Object.assign(live.quotes, await fetchQuotes(need)); } catch { /* filled on a later start */ }
   }
+  let got = false;
   for (const s of symbols) {
     const w = data.watch.find((x) => x.symbol === s);
-    if (w && w.addedPrice == null) w.addedPrice = lastPrice(live.quotes[s]);
+    const price = lastPrice(live.quotes[s]);
+    if (w && w.addedPrice == null && price != null) { w.addedPrice = price; got = true; }
   }
+  if (!got) return;
   save();
   actions.refresh();
   poll();
