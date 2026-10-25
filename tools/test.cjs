@@ -364,6 +364,13 @@ async function run(viewport, tag, scheme, lang) {
   await page.waitForTimeout(300);
   check(await page.locator('.report-banner').count() === 0, 'banner stays gone after reload');
   check(await page.evaluate(() => JSON.parse(localStorage.getItem('rk.data')).opinions.SERV.verdict) === 'broken', 'a newer hand-pasted verdict beats the older report');
+  for (const verdict of ['ok', 'broken']) {
+    const body = JSON.stringify({ ...REPORT[lang], opinions: [{ symbol: 'NFLX', verdict, text: verdict }] });
+    await page.route('**/claude/report.json', (route) => route.fulfill({ contentType: 'application/json', body }));
+    await page.reload();
+    await page.waitForFunction((v) => JSON.parse(localStorage.getItem('rk.data')).opinions.NFLX?.verdict === v, verdict, { timeout: 5000 }).catch(() => {});
+  }
+  check(await page.evaluate(() => JSON.parse(localStorage.getItem('rk.data')).opinions.NFLX?.verdict) === 'broken', 'a report rewritten the same day replaces its own verdict');
 
   // ---- import backup into a fresh context ----
   const ctx2 = await browser.newContext({ viewport, colorScheme: scheme, locale: lang === 'ru' ? 'ru-RU' : 'en-US' });

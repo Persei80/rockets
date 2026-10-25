@@ -52,7 +52,8 @@ function clean(raw) {
   };
 }
 
-// A verdict pasted by hand on a later date wins over an older report.
+// A verdict pasted by hand on the same or a later date wins over the report;
+// a report rewritten the same day replaces its own earlier verdicts.
 export async function loadReport() {
   lastFetch = Date.now();
   let raw;
@@ -69,7 +70,8 @@ export async function loadReport() {
   let changed = false;
   for (const o of r.opinions) {
     const old = data.opinions[o.symbol];
-    if (old && old.date >= r.date) continue;
+    if (old && (old.date > r.date || (old.date === r.date && old.hand))) continue;
+    if (old && old.date === r.date && old.verdict === o.verdict && old.text === o.text) continue;
     data.opinions[o.symbol] = { verdict: o.verdict, text: o.text, date: r.date };
     changed = true;
   }

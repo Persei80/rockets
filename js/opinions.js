@@ -87,7 +87,7 @@ export function setupOpinions() {
     e.preventDefault();
     const { date, items } = parseOpinions($('#op-text').value);
     if (!items.length) return;
-    for (const it of items) data.opinions[it.symbol] = { verdict: it.verdict, text: it.text, date };
+    for (const it of items) data.opinions[it.symbol] = { verdict: it.verdict, text: it.text, date, hand: true };
     save();
     $('#op-dialog').close();
     toast(tp('op.saved', items.length));
