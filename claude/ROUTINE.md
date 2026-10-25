@@ -21,8 +21,12 @@ simple words, like for someone who is new to investing.
    - `ok` — the move comes from market mood or a one-off reason; the idea is intact;
    - `watch` — worrying news (cash running out, new share sales, weak results, key people leaving);
    - `broken` — the reason to own it no longer holds.
-   The `text` is 1–2 short sentences: why the price moved and what comes next
-   (for example the next earnings date).
+   The `text` (at most 550 characters) is 3–4 short sentences: why the price
+   moved, what comes next (for example the next earnings date) and whether it is
+   getting better or worse. It ends with a clear advice for this week, starting
+   with «Совет:» — «докупать сейчас», «подождать 1–2 недели», «подождать до
+   отчёта (дата)», «подождать месяц», «не докупать» or «продать» — and the
+   reason in a few words. This is Claude's own opinion; say it plainly.
 5. Monthly runs only:
    - Pick up to 3 new candidates, strongest first, with the rules below, and add
      each to `claude/tracked.txt`.
@@ -39,8 +43,19 @@ simple words, like for someone who is new to investing.
      $126,000 in October 2025). Then: "⚠️ Биткоин упал до $…", your view on the
      chance of returning to $100,000, and whether to buy a bitcoin fund in Blink
      (for example IBIT) for 100–200 ₪.
-6. Weekly runs: `candidates` is `[]`, `plan`, `creative` and `bitcoin` are `""`.
-   Still mention bitcoin in `bitcoin` if it is below $35,000.
+6. Weekly runs: `candidates` is `[]`, `creative` and `bitcoin` are `""`.
+   `plan` is one sentence on what to do this week, for example «На этой неделе:
+   ничего не покупать, ждём отчёт AMPX 6 ноября» or «На этой неделе можно
+   докупить SLDP на 100 ₪». Still mention bitcoin in `bitcoin` if it is below
+   $35,000.
+
+## How to run it cheaply
+
+The run is scheduled on the owner's Mac (Claude desktop app, scheduled tasks):
+weekly on Monday at 08:00 Israel time, monthly on the 10th at 08:00. It uses the
+Max subscription, not cloud credit. Do the research with cheaper subagents
+(`model: "sonnet"`), one per ticker in parallel, plus one for the market mood and
+bitcoin; then check their numbers against each other and write the file yourself.
 
 ### Rules for new candidates
 

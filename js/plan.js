@@ -26,12 +26,11 @@ function lastMonths(n) {
   return out;
 }
 
-// The monthly report goes out on the first Saturday of each month.
+// The monthly report goes out on the 10th of each month (payday).
 function nextReport() {
-  const firstSat = (y, m) => { const d = new Date(y, m, 1); d.setDate(1 + ((6 - d.getDay() + 7) % 7)); return d; };
   const now = new Date();
-  let d = firstSat(now.getFullYear(), now.getMonth());
-  if (isoDate(d) < todayIso()) d = firstSat(now.getFullYear(), now.getMonth() + 1);
+  let d = new Date(now.getFullYear(), now.getMonth(), 10);
+  if (isoDate(d) < todayIso()) d = new Date(now.getFullYear(), now.getMonth() + 1, 10);
   return isoDate(d);
 }
 

@@ -27,6 +27,9 @@ Do not touch the `persei80/stock-watch` repository: it belongs to a friend's fri
 - `claude/ROUTINE.md` — the automatic check: research `claude/tracked.txt`, write
   `claude/report.json`; the app loads it on start (`js/report.js`), files verdicts
   under each company (`js/opinions.js`) and offers new candidates.
-- Running it in Claude's cloud costs the owner's cloud credit, so the two scheduled
-  tasks were created and then paused. To run it for free, do it here, locally:
-  "сделай проверку по claude/ROUTINE.md", then commit and push.
+- Running it in Claude's cloud costs the owner's cloud credit, so the two cloud
+  routines stay paused. Instead it runs on the owner's Mac as desktop-app scheduled
+  tasks (Max subscription, free): `rockets-weekly-check` (Monday 08:00) and
+  `rockets-monthly-check` (the 10th, 08:00). The Mac must be on and the app open;
+  a missed run starts on next launch. By hand: "сделай проверку по
+  claude/ROUTINE.md", then commit and push.

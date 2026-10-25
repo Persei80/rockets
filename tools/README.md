@@ -8,7 +8,7 @@ npm install --no-save playwright && npx playwright install chromium
 npx http-server .. -p 8123 -c-1 -s &        # serve the app from the repo root
 node test.cjs http://localhost:8123 /tmp/shots   # must end with ALL CHECKS PASSED
 node showcase.cjs /tmp/showcase                  # demo screenshots
-npx eslint@9 -c eslint.config.mjs ../js          # lint
+(cd .. && npx eslint@9 -c tools/eslint.config.mjs js)   # lint, from the repo root
 ```
 
 `icons.py` draws the app icons in `../icons/`.
